@@ -1,0 +1,99 @@
+name: Publish apmw
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    name: Build apmw
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Build package
+        run: uv build
+
+  determine-version:
+    name: Determine Version
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.version.outputs.semver }}
+      python-version: ${{ steps.version.outputs.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Determine version
+        id: version
+        uses: GravionLabs/ci/versioning/determine-version@main
+        with:
+          gitversion-config-file: GitVersion.yml
+
+  publish:
+    name: Build & Publish to GitHub Packages
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - determine-version
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Write version to pyproject.toml
+        run: |
+          VERSION="${{ needs.determine-version.outputs.python-version }}"
+          sed -i "s/^version = .*/version = \"$VERSION\"/" pyproject.toml
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish to GitHub Packages
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv publish \
+            --publish-url https://pypi.pkg.github.com/${{ github.repository_owner }}/
+
+      - name: Tag release
+        run: |
+          TAG="v${{ needs.determine-version.outputs.semver }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"

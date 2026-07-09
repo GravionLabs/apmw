@@ -1,0 +1,20 @@
+[project]
+name = "apmw"
+version = "0.1.0"
+description = "Cross-platform wrapper for the apm CLI — sanitizes agent frontmatter per target"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+apmw = "apmw:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
