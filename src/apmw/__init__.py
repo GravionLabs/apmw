@@ -90,9 +90,9 @@ def get_global_agents_dirs(target: str) -> list[Path]:
 def _add_sanitize_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "-p", "--platform",
-        default="opencode",
+        default=None,
         choices=list(TARGET_STRIP_FIELDS.keys()),
-        help="Target platform (default: opencode)",
+        help="Target platform (default: all known platforms)",
     )
     parser.add_argument(
         "-s", "--source",
@@ -118,6 +118,11 @@ def build_parser() -> argparse.ArgumentParser:
         "install", help="Run apm install then sanitize agent frontmatter per target."
     )
     _add_sanitize_args(install_parser)
+
+    sanitize_parser = subparsers.add_parser(
+        "sanitize", help="Sanitize an already-installed agent directory without running apm."
+    )
+    _add_sanitize_args(sanitize_parser)
 
     update_parser = subparsers.add_parser(
         "update", help="Run apm update then sanitize agent frontmatter per target."
@@ -308,7 +313,13 @@ def run_apm(subcommand: str, args: list[str]) -> int:
     return result.returncode
 
 
-def do_sanitize(platform_name: str, global_: bool, source: bool) -> None:
+def do_sanitize(platform_name: str | None, global_: bool, source: bool) -> None:
+    if platform_name is None:
+        for name in TARGET_STRIP_FIELDS:
+            print(f"[{name}]")
+            do_sanitize(name, global_, source)
+        return
+
     fields = TARGET_STRIP_FIELDS.get(platform_name, [])
     packages_dir = Path.cwd() / "packages"
 
@@ -339,6 +350,10 @@ def do_sanitize(platform_name: str, global_: bool, source: bool) -> None:
 def main() -> None:
     parser = build_parser()
     ns, apm_args = parser.parse_known_args(sys.argv[1:])
+
+    if ns.command == "sanitize":
+        do_sanitize(ns.platform, ns.global_, ns.source)
+        return
 
     apm_extra: list[str] = []
     if ns.global_:

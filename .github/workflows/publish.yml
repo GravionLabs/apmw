@@ -11,34 +11,8 @@ permissions:
   packages: write
 
 jobs:
-  build:
-    name: Build apmw
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "latest"
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-
-      - name: Install dependencies
-        run: uv sync
-
-      - name: Run tests
-        run: uv run pytest
-
-      - name: Build package
-        run: uv build
-
   determine-version:
     name: Determine Version
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     outputs:
       semver: ${{ steps.version.outputs.semver }}
@@ -53,47 +27,93 @@ jobs:
         with:
           gitversion-config-file: GitVersion.yml
 
+  build-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    needs: determine-version
+    steps:
+      - name: Build
+        uses: GravionLabs/ci/python/build@main
+        with:
+          version: ${{ needs.determine-version.outputs.python-version }}
+
+      - name: Test
+        uses: GravionLabs/ci/python/test@main
+
+  build-executables:
+    name: Build executable (${{ matrix.suffix }})
+    runs-on: ${{ matrix.os }}
+    needs: determine-version
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            suffix: linux
+          - os: macos-latest
+            suffix: macos-arm64
+          - os: windows-latest
+            suffix: windows.exe
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python (uv)
+        uses: GravionLabs/ci/python/setup@main
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Build executable
+        run: uv run --with pyinstaller pyinstaller --onefile --name apmw-${{ matrix.suffix }} scripts/apmw_entrypoint.py
+
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apmw-${{ matrix.suffix }}
+          path: dist/apmw-${{ matrix.suffix }}
+          if-no-files-found: error
+
   publish:
-    name: Build & Publish to GitHub Packages
+    name: Publish to GitHub Packages
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs:
-      - build
       - determine-version
+      - build-test
     steps:
-      - uses: actions/checkout@v4
+      - name: Publish Python package
+        uses: GravionLabs/ci/python/pypi/publish@main
         with:
-          fetch-depth: 0
+          feed-url: https://pypi.pkg.github.com/${{ github.repository_owner }}/
+          api-key: ${{ secrets.GITHUB_TOKEN }}
+          download-artifact: 'true'
 
-      - name: Write version to pyproject.toml
-        run: |
-          VERSION="${{ needs.determine-version.outputs.python-version }}"
-          sed -i "s/^version = .*/version = \"$VERSION\"/" pyproject.toml
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
+  release:
+    name: Release
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs:
+      - determine-version
+      - publish
+      - build-executables
+    permissions:
+      contents: write
+    steps:
+      - name: Create GitHub Release
+        uses: GravionLabs/ci/versioning/gh-release@main
         with:
-          version: "latest"
+          version: ${{ needs.determine-version.outputs.semver }}
+          tag-prefix: v
 
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v5
+      - name: Download executable artifacts
+        uses: actions/download-artifact@v4
         with:
-          python-version: "3.14"
+          pattern: apmw-*
+          path: executables
+          merge-multiple: true
 
-      - name: Build package
-        run: uv build
-
-      - name: Publish to GitHub Packages
+      - name: Attach executables to release
         env:
-          UV_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          uv publish \
-            --publish-url https://pypi.pkg.github.com/${{ github.repository_owner }}/
-
-      - name: Tag release
+          GH_TOKEN: ${{ github.token }}
         run: |
           TAG="v${{ needs.determine-version.outputs.semver }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$TAG"
-          git push origin "$TAG"
+          gh release upload "$TAG" executables/* --clobber

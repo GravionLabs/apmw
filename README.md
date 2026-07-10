@@ -17,22 +17,41 @@ pipx install apmw
 uvx apmw install -p claude
 ```
 
+Prebuilt single-file executables (linux, macOS-arm64, windows) that need no Python environment
+are attached to each [GitHub Release](https://github.com/GravionLabs/apmw/releases).
+
+### Local development install
+
+To install the local checkout (editable — picks up source edits immediately, no need to rerun
+after each change):
+
+```bash
+./install.sh       # Linux / macOS
+.\install.ps1       # Windows
+```
+
+Uses `uv tool install` if `uv` is on `PATH`, falling back to `pipx`.
+
 ## Usage
 
 ```bash
 apmw install -p claude      # apm install + sanitize for Claude Code
 apmw install -p opencode    # apm install + sanitize for OpenCode
 apmw update  -p copilot     # apm update + sanitize for GitHub Copilot
+apmw sanitize -p claude     # sanitize an already-installed local agent dir (no apm call)
+apmw sanitize -g -p claude  # sanitize the global Claude Code agent dir
+apmw sanitize               # sanitize for every known platform (opencode, copilot, claude, cursor, codex)
 ```
 
 Flags:
 
-- `-p, --platform` — target platform: `opencode` (default), `copilot`, `claude`, `cursor`, `codex`
+- `-p, --platform` — target platform: `opencode`, `copilot`, `claude`, `cursor`, `codex`; omit to run for every known platform
 - `-g, --global` — sanitize the platform's global agent install directory instead of the current project
 - `-s, --source` — also add explicit `permission` blocks to source agent files under `packages/*/.apm/agents/`
 - `update` only: `-y, --yes` (skip consent prompt), `--dry-run` (preview only, skips sanitization)
 
-`apmw` requires `apm` to already be installed and on `PATH`.
+`apmw install`/`update` require `apm` to already be installed and on `PATH`.
+`apmw sanitize` operates only on local files and does not invoke `apm`.
 
 ## Development
 
