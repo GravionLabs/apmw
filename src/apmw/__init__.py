@@ -74,6 +74,7 @@ GLOBAL_PATHS: dict[str, dict[str, list[str]]] = {
 TOOLS_ARRAY_RE = re.compile(r'^tools:\s*\[')
 TOOLS_BLOCK_RE = re.compile(r'^tools:\s*$')
 PERMISSION_RE = re.compile(r'^permission:')
+METADATA_RE = re.compile(r'^metadata\s*:')
 
 
 def resolve_path(raw: str) -> Path:
@@ -237,6 +238,56 @@ def add_permission_block(fm_lines: list[str]) -> list[str] | None:
         return fm_lines + perm_block
 
 
+def extract_platform_metadata(fm_lines: list[str], platform: str) -> list[str]:
+    platform_re = re.compile(r'^(\s+)' + re.escape(platform) + r'\s*:')
+
+    in_metadata = False
+    platform_indent: int | None = None
+    content_base_indent: int | None = None
+    result: list[str] = []
+
+    for line in fm_lines:
+        if not in_metadata:
+            if METADATA_RE.match(line):
+                in_metadata = True
+            continue
+
+        if platform_indent is None:
+            if not line or not line[0].isspace():
+                break
+            m = platform_re.match(line)
+            if m:
+                platform_indent = len(m.group(1))
+            continue
+
+        if not line or not line[0].isspace():
+            break
+        current_indent = len(line) - len(line.lstrip())
+        if current_indent <= platform_indent:
+            break
+        if content_base_indent is None:
+            content_base_indent = current_indent
+        result.append(line[content_base_indent:])
+
+    return result
+
+
+def inject_metadata_fields(fm_lines: list[str], meta_lines: list[str]) -> list[str]:
+    if not meta_lines:
+        return fm_lines
+
+    meta_fields = []
+    for line in meta_lines:
+        if line and not line[0].isspace():
+            m = re.match(r'^(\S+)\s*:', line)
+            if m:
+                meta_fields.append(m.group(1))
+
+    stripped = strip_fields(fm_lines, meta_fields)
+    base = stripped if stripped is not None else list(fm_lines)
+    return base + meta_lines
+
+
 def rewrite_file(path: Path, new_fm_lines: list[str], original_lines: list[str], fm_end: int) -> None:
     body = original_lines[fm_end + 1:]
     result = ["---"] + new_fm_lines + ["---"] + body
@@ -246,7 +297,7 @@ def rewrite_file(path: Path, new_fm_lines: list[str], original_lines: list[str],
     path.write_text(text)
 
 
-def sanitize_installed(agents_dir: Path, fields: list[str]) -> int:
+def sanitize_installed(agents_dir: Path, fields: list[str], platform: str | None = None) -> int:
     if not agents_dir.is_dir():
         return 0
 
@@ -259,15 +310,28 @@ def sanitize_installed(agents_dir: Path, fields: list[str]) -> int:
         _, fm_end = fm
         fm_lines = lines[1:fm_end]
 
-        new_fm = strip_fields(fm_lines, fields)
-        if new_fm is None:
+        platform_meta = extract_platform_metadata(fm_lines, platform) if platform else []
+
+        stripped = strip_fields(fm_lines, fields)
+        new_fm = stripped if stripped is not None else list(fm_lines)
+
+        if platform_meta:
+            new_fm = inject_metadata_fields(new_fm, platform_meta)
+
+        if new_fm == fm_lines:
             continue
 
         rewrite_file(f, new_fm, lines, fm_end)
         changed += 1
         name = f.stem
         removed = [k for k in fields if any(re.match(r'^' + re.escape(k) + r'\s*:', l) for l in fm_lines)]
-        print(f"  [strip]   {name} — removed {', '.join(removed)}")
+        injected = [m.group(1) for l in platform_meta if (m := re.match(r'^(\S+)\s*:', l))]
+        parts = []
+        if removed:
+            parts.append(f"removed {', '.join(removed)}")
+        if injected:
+            parts.append(f"injected {', '.join(injected)}")
+        print(f"  [strip]   {name} — {'; '.join(parts)}")
 
     return changed
 
@@ -328,14 +392,14 @@ def do_sanitize(platform_name: str | None, global_: bool, source: bool) -> None:
     if global_:
         dirs = get_global_agents_dirs(platform_name)
         for d in dirs:
-            cnt = sanitize_installed(d, fields)
+            cnt = sanitize_installed(d, fields, platform_name)
             if cnt:
                 print(f"  ({d})")
             changed_installed += cnt
     else:
         target_subdir = TARGET_DIRS.get(platform_name, f".{platform_name}")
         target_dir = Path.cwd() / target_subdir
-        changed_installed = sanitize_installed(target_dir / "agents", fields)
+        changed_installed = sanitize_installed(target_dir / "agents", fields, platform_name)
 
     changed_source = 0
     if source:

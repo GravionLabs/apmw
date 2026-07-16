@@ -1,7 +1,7 @@
 {
-  "opencode": ["tools", "user-invocable", "agents"],
-  "copilot": ["mode", "steps", "color", "permission", "task"],
-  "claude": ["mode", "steps", "color", "tools", "permission", "user-invocable", "agents", "model"],
-  "cursor": ["mode", "steps", "color", "permission"],
-  "codex": ["mode", "steps", "color", "permission"]
+  "opencode": ["tools", "user-invocable", "agents", "metadata"],
+  "copilot": ["mode", "steps", "color", "permission", "task", "metadata"],
+  "claude": ["mode", "steps", "color", "tools", "permission", "user-invocable", "agents", "model", "metadata"],
+  "cursor": ["mode", "steps", "color", "permission", "metadata"],
+  "codex": ["mode", "steps", "color", "permission", "metadata"]
 }
