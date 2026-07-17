@@ -85,7 +85,7 @@ def resolve_path(raw: str) -> Path:
 def get_global_agents_dirs(target: str) -> list[Path]:
     system = _platform.system()
     dirs = GLOBAL_PATHS.get(target, {}).get(system, [])
-    return [resolve_path(d) / "agents" for d in dirs]
+    return [resolve_path(d) for d in dirs]
 
 
 def _add_sanitize_args(parser: argparse.ArgumentParser) -> None:
