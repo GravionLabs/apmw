@@ -6,3 +6,5 @@ build/
 *.spec
 .venv/
 .pytest_cache/
+.coverage
+coverage.xml
