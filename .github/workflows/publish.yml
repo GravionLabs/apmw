@@ -73,9 +73,11 @@ jobs:
           if-no-files-found: error
 
   publish:
-    name: Publish to GitHub Packages
+    name: Publish to PyPI
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     needs:
       - determine-version
       - build-test
@@ -83,8 +85,6 @@ jobs:
       - name: Publish Python package
         uses: GravionLabs/ci/python/pypi/publish@main
         with:
-          feed-url: https://pypi.pkg.github.com/${{ github.repository_owner }}/
-          api-key: ${{ secrets.GITHUB_TOKEN }}
           download-artifact: 'true'
 
   release:
