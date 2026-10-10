@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -42,6 +43,9 @@ jobs:
 
   build-executables:
     name: Build executable (${{ matrix.suffix }})
+    # macOS and Windows runners are expensive: executables are only built when a release branch is
+    # merged into main (or on workflow_dispatch). Pull requests get build-test on Linux.
+    if: github.event_name != 'pull_request'
     runs-on: ${{ matrix.os }}
     needs: determine-version
     strategy:
