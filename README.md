@@ -54,7 +54,7 @@ apmw sanitize               # sanitize for every known platform
 | `-g, --global` | Sanitize the platform's global agent install directory instead of the project dir |
 | `-s, --source` | Also inject `permission:` blocks into source agent files under `packages/` |
 | `-y, --yes` | (`update` only) Skip consent prompt |
-| `--dry-run` | (`update` only) Preview changes without writing |
+| `--dry-run` | `update`: preview apm changes without writing; `sanitize`: print a diff per agent file instead of writing |
 
 `apmw install`/`update` require `apm` to be installed and on `PATH`.  
 `apmw sanitize` operates only on local files and does not invoke `apm`.
@@ -130,14 +130,25 @@ platform-specific additions via a reserved `metadata:` key.
 | :--------------- | :-----: | :------: | :---------: | :------------: |
 | `name`           |    ✅    |    ✅     |      ✅      |       ✅        |
 | `description`    |    ✅    |    ✅     |      ✅      |       ✅        |
-| `tools`          |    ✅    |    ❌     |      ✅ *    |       ✅        |
-| `mode`           |    ✅    |    ❌     |      ❌      |       ❌        |
+| `tools`          |    ✅    |    ❌ †   |      ✅ *    |       ✅        |
+| `mode`           |    ✅    |    ✅ †   |      ❌      |       ❌        |
 | `steps`          |    ✅    |    ❌     |      ❌      |       ❌        |
 | `color`          |    ✅    |    ❌     |      ❌      |       ❌        |
-| `permission`     |    ❌    |    ✅     |      ❌      |       ❌        |
+| `permission`     |    ❌    |    ✅ †   |      ❌      |       ❌        |
 | `user-invocable` |    ✅    |    ❌     |      ❌      |       ❌        |
-| `model`          |    ✅    |    ✅     |      ❌      |       ✅        |
+| `model`          |    ✅    |    ✅ †   |      ✅ *    |       ✅        |
+| `skills`         |    ❌    |    ❌     |      ✅ *    |       ❌        |
 | `agents`         |    ✅    |    ❌     |      ❌      |       ✅        |
+
+\* Claude Code reads `tools`, `model` and `skills` from `metadata.claude` (the top-level Copilot
+values are stripped because the tool names and model ids differ).
+† OpenCode reads `mode`, `model` and `permission` from `metadata.opencode`; its list-form `tools`
+is rejected at load time, so `tools` is always stripped.
+
+The four agents shipped by apm-hub (`dev-workflow`, `explorer`, `reviewer`, `implementer`) are the
+reference fixtures: `tests/fixtures/agents/*.agent.md` with the expected output per platform under
+`tests/fixtures/expected/<platform>/`. `apmw sanitize --dry-run -p <platform>` prints the diff
+without writing.
 
 *Claude Code uses different tool identifiers than Copilot (`Bash` vs `run_in_terminal`, etc.).
 
