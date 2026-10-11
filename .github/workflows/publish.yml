@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    # Docs-only changes are checked by pages.yml.
+    paths-ignore:
+      - 'docs/**'
+      - 'apps/site/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:

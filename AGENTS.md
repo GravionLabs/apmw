@@ -13,6 +13,9 @@ invoking `apm` at all.
 - `docs/guide/*.md` — the user guide (one page per topic, order given by the numbered list in
   `docs/guide/README.md`); the README keeps only intro, install, usage and links. Move user-facing
   documentation here, not into the README.
+- `apps/site/` — the documentation site (VitePress, `srcDir` is `docs/`), published on GitHub Pages
+  by `.github/workflows/pages.yml`. `pnpm --filter @apmw/site dev` to preview, `build` fails on dead
+  links, `test` checks that the sidebar list in `docs/guide/README.md` matches the pages on disk.
 - `src/apmw/__init__.py` — the entire package: argument parsing, sanitization logic, and `apm`
   subprocess invocation all live in this single file.
 - `src/apmw/data/agent-strip-fields.json` — per-platform list of frontmatter fields to strip.

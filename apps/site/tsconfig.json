@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["vitest/globals", "node"],
+    "noEmit": true
+  },
+  "include": [".vitepress/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+}
