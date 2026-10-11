@@ -10,6 +10,9 @@ invoking `apm` at all.
 
 ## Repo layout
 
+- `docs/guide/*.md` — the user guide (one page per topic, order given by the numbered list in
+  `docs/guide/README.md`); the README keeps only intro, install, usage and links. Move user-facing
+  documentation here, not into the README.
 - `src/apmw/__init__.py` — the entire package: argument parsing, sanitization logic, and `apm`
   subprocess invocation all live in this single file.
 - `src/apmw/data/agent-strip-fields.json` — per-platform list of frontmatter fields to strip.
