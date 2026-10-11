@@ -13,12 +13,15 @@ invoking `apm` at all.
 - `src/apmw/__init__.py` — the entire package: argument parsing, sanitization logic, and `apm`
   subprocess invocation all live in this single file.
 - `src/apmw/data/agent-strip-fields.json` — per-platform list of frontmatter fields to strip.
-  **Must be kept in sync with `apm-hub`'s `config/agent-strip-fields.json`** (used by
-  `src/generators/agent-target-generator.ts` there) — there is no automated sync, update both by
-  hand when the set of fields per platform changes.
+  This file is the only source of truth; apm-hub no longer carries a copy (its agent generator was
+  removed with the agents-to-skills migration).
 - `tests/test_sanitize.py` — unit tests for the frontmatter-stripping logic (`sanitize_installed`,
   `strip_fields`, `add_permission_block`).
-- `tests/test_cli.py` — CLI-level tests: argument parsing and `main()` dispatch.
+- `tests/test_cli.py` — CLI-level tests: argument parsing, `main()` dispatch, global paths.
+- `tests/fixtures/agents/*.agent.md` — the four agents apm-hub ships (`packages/agents`), copied
+  verbatim; `tests/fixtures/expected/<platform>/` holds the sanitized golden output and
+  `tests/test_fixtures.py` compares against it. When apm-hub changes an agent, copy it here and
+  regenerate the goldens with `sanitize_installed` (see the test module).
 
 ## Key concepts
 
