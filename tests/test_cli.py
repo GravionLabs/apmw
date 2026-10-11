@@ -1,6 +1,38 @@
 from pathlib import Path
 
-from apmw import build_parser, main
+import pytest
+
+from apmw import build_parser, get_global_agents_dirs, main
+
+
+@pytest.mark.parametrize(
+    ("system", "target", "first"),
+    [
+        ("Linux", "copilot", "~/.copilot/agents"),
+        ("Darwin", "copilot", "~/.copilot/agents"),
+        ("Linux", "claude", "~/.claude/agents"),
+        ("Darwin", "claude", "~/.claude/agents"),
+        ("Linux", "opencode", "~/.config/opencode/agents"),
+        ("Darwin", "opencode", "~/.config/opencode/agents"),
+    ],
+)
+def test_global_agents_dirs_match_apm_install_g(monkeypatch, system: str, target: str, first: str):
+    monkeypatch.setattr("apmw._platform.system", lambda: system)
+    dirs = get_global_agents_dirs(target)
+    assert dirs[0] == Path(first).expanduser()
+
+
+def test_global_agents_dirs_windows_copilot(monkeypatch):
+    # %VAR% only expands on Windows; on POSIX the raw entry must still name the apm location.
+    monkeypatch.setattr("apmw._platform.system", lambda: "Windows")
+    first = str(get_global_agents_dirs("copilot")[0])
+    assert first.endswith("\\.copilot\\agents")
+    assert first.startswith(("%USERPROFILE%", "C:", "D:")) or "\\Users\\" in first
+
+
+def test_global_agents_dirs_unknown_target_is_empty(monkeypatch):
+    monkeypatch.setattr("apmw._platform.system", lambda: "Linux")
+    assert get_global_agents_dirs("nope") == []
 
 
 def test_sanitize_parser_defaults():

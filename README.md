@@ -79,15 +79,16 @@ apmw install all@apm-hub -g -p copilot
 `apmw install` calls `apm install -g` (which deploys to global paths) and then
 sanitizes all agent files in those paths for the target platform.
 
-**Global agent paths per platform:**
+**Global agent paths per platform** (where `apm install -g` writes, verified with apm 0.33;
+the second entry is a fallback for hand-made installs):
 
-| Platform       | Linux / macOS                                    | Windows                                     |
-| :------------- | :----------------------------------------------- | :------------------------------------------ |
-| OpenCode       | `~/.config/opencode/agents/`                     | `%APPDATA%\opencode\agents\`                |
-| Claude Code    | `~/.claude/agents/` · `~/.config/claude/agents/` | `%APPDATA%\Claude\agents\`                  |
-| GitHub Copilot | `~/.config/github-copilot/agents/`               | `%APPDATA%\GitHub Copilot\agents\`          |
-| Cursor         | `~/.cursor/agents/`                              | `%APPDATA%\Cursor\agents\`                  |
-| Codex          | `~/.codex/agents/`                               | `%APPDATA%\Codex\agents\`                   |
+| Platform       | Linux / macOS                                               | Windows                                                        |
+| :------------- | :---------------------------------------------------------- | :------------------------------------------------------------- |
+| OpenCode       | `~/.config/opencode/agents/`                                | `%USERPROFILE%\.config\opencode\agents\` · `%APPDATA%\opencode\agents\` |
+| Claude Code    | `~/.claude/agents/` · `~/.config/claude/agents/`            | `%USERPROFILE%\.claude\agents\` · `%APPDATA%\Claude\agents\`   |
+| GitHub Copilot | `~/.copilot/agents/` · `~/.config/github-copilot/agents/`   | `%USERPROFILE%\.copilot\agents\` · `%APPDATA%\GitHub Copilot\agents\` |
+| Cursor         | `~/.cursor/agents/`                                         | `%APPDATA%\Cursor\agents\`                                     |
+| Codex          | `~/.codex/agents/`                                          | `%APPDATA%\Codex\agents\`                                      |
 
 ### Transitive MCP server definitions
 
