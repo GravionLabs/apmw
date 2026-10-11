@@ -1,4 +1,5 @@
 import argparse
+import difflib
 import json
 import os
 import platform as _platform
@@ -43,21 +44,24 @@ def _load_target_strip_fields() -> dict[str, list[str]]:
 
 TARGET_STRIP_FIELDS = _load_target_strip_fields()
 
+# Verified against apm 0.33 `apm install -g` (sandboxed HOME, 2026-10-11): it writes
+# ~/.claude/agents, ~/.config/opencode/agents and ~/.copilot/agents on every OS;
+# the older vendor-specific dirs stay as fallbacks for hand-made installs.
 GLOBAL_PATHS: dict[str, dict[str, list[str]]] = {
     "opencode": {
         "Linux": ["~/.config/opencode/agents"],
-        "Darwin": ["~/Library/Application Support/opencode/agents"],
-        "Windows": ["%APPDATA%\\opencode\\agents"],
+        "Darwin": ["~/.config/opencode/agents", "~/Library/Application Support/opencode/agents"],
+        "Windows": ["%USERPROFILE%\\.config\\opencode\\agents", "%APPDATA%\\opencode\\agents"],
     },
     "copilot": {
-        "Linux": ["~/.config/github-copilot/agents"],
-        "Darwin": ["~/Library/Application Support/github-copilot/agents"],
-        "Windows": ["%APPDATA%\\GitHub Copilot\\agents"],
+        "Linux": ["~/.copilot/agents", "~/.config/github-copilot/agents"],
+        "Darwin": ["~/.copilot/agents", "~/Library/Application Support/github-copilot/agents"],
+        "Windows": ["%USERPROFILE%\\.copilot\\agents", "%APPDATA%\\GitHub Copilot\\agents"],
     },
     "claude": {
         "Linux": ["~/.claude/agents", "~/.config/claude/agents"],
-        "Darwin": ["~/Library/Application Support/claude/agents"],
-        "Windows": ["%APPDATA%\\Claude\\agents"],
+        "Darwin": ["~/.claude/agents", "~/Library/Application Support/claude/agents"],
+        "Windows": ["%USERPROFILE%\\.claude\\agents", "%APPDATA%\\Claude\\agents"],
     },
     "cursor": {
         "Linux": ["~/.cursor/agents", "~/.config/cursor/agents"],
@@ -124,6 +128,11 @@ def build_parser() -> argparse.ArgumentParser:
         "sanitize", help="Sanitize an already-installed agent directory without running apm."
     )
     _add_sanitize_args(sanitize_parser)
+    sanitize_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print a diff per file instead of writing",
+    )
 
     update_parser = subparsers.add_parser(
         "update", help="Run apm update then sanitize agent frontmatter per target."
@@ -297,7 +306,18 @@ def rewrite_file(path: Path, new_fm_lines: list[str], original_lines: list[str],
     path.write_text(text)
 
 
-def sanitize_installed(agents_dir: Path, fields: list[str], platform: str | None = None) -> int:
+def sanitize_frontmatter(fm_lines: list[str], fields: list[str], platform: str | None = None) -> list[str]:
+    platform_meta = extract_platform_metadata(fm_lines, platform) if platform else []
+    stripped = strip_fields(fm_lines, fields)
+    new_fm = stripped if stripped is not None else list(fm_lines)
+    if platform_meta:
+        new_fm = inject_metadata_fields(new_fm, platform_meta)
+    return new_fm
+
+
+def sanitize_installed(
+    agents_dir: Path, fields: list[str], platform: str | None = None, dry_run: bool = False
+) -> int:
     if not agents_dir.is_dir():
         return 0
 
@@ -311,17 +331,16 @@ def sanitize_installed(agents_dir: Path, fields: list[str], platform: str | None
         fm_lines = lines[1:fm_end]
 
         platform_meta = extract_platform_metadata(fm_lines, platform) if platform else []
-
-        stripped = strip_fields(fm_lines, fields)
-        new_fm = stripped if stripped is not None else list(fm_lines)
-
-        if platform_meta:
-            new_fm = inject_metadata_fields(new_fm, platform_meta)
+        new_fm = sanitize_frontmatter(fm_lines, fields, platform)
 
         if new_fm == fm_lines:
             continue
 
-        rewrite_file(f, new_fm, lines, fm_end)
+        if dry_run:
+            diff = difflib.unified_diff(fm_lines, new_fm, fromfile=str(f), tofile=f"{f} (sanitized)", lineterm="")
+            print("\n".join(diff))
+        else:
+            rewrite_file(f, new_fm, lines, fm_end)
         changed += 1
         name = f.stem
         removed = [k for k in fields if any(re.match(r'^' + re.escape(k) + r'\s*:', l) for l in fm_lines)]
@@ -377,11 +396,11 @@ def run_apm(subcommand: str, args: list[str]) -> int:
     return result.returncode
 
 
-def do_sanitize(platform_name: str | None, global_: bool, source: bool) -> None:
+def do_sanitize(platform_name: str | None, global_: bool, source: bool, dry_run: bool = False) -> None:
     if platform_name is None:
         for name in TARGET_STRIP_FIELDS:
             print(f"[{name}]")
-            do_sanitize(name, global_, source)
+            do_sanitize(name, global_, source, dry_run)
         return
 
     fields = TARGET_STRIP_FIELDS.get(platform_name, [])
@@ -392,20 +411,21 @@ def do_sanitize(platform_name: str | None, global_: bool, source: bool) -> None:
     if global_:
         dirs = get_global_agents_dirs(platform_name)
         for d in dirs:
-            cnt = sanitize_installed(d, fields, platform_name)
+            cnt = sanitize_installed(d, fields, platform_name, dry_run)
             if cnt:
                 print(f"  ({d})")
             changed_installed += cnt
     else:
         target_subdir = TARGET_DIRS.get(platform_name, f".{platform_name}")
         target_dir = Path.cwd() / target_subdir
-        changed_installed = sanitize_installed(target_dir / "agents", fields, platform_name)
+        changed_installed = sanitize_installed(target_dir / "agents", fields, platform_name, dry_run)
 
     changed_source = 0
-    if source:
+    if source and not dry_run:
         changed_source = sanitize_source(packages_dir)
 
-    parts = [f"{changed_installed} {'global ' if global_ else ''}installed files sanitized"]
+    verb = "would be sanitized" if dry_run else "sanitized"
+    parts = [f"{changed_installed} {'global ' if global_ else ''}installed files {verb}"]
     if source:
         parts.append(f"{changed_source} source files updated")
     print(f"\nDone: {', '.join(parts)}")
@@ -416,7 +436,7 @@ def main() -> None:
     ns, apm_args = parser.parse_known_args(sys.argv[1:])
 
     if ns.command == "sanitize":
-        do_sanitize(ns.platform, ns.global_, ns.source)
+        do_sanitize(ns.platform, ns.global_, ns.source, ns.dry_run)
         return
 
     apm_extra: list[str] = []

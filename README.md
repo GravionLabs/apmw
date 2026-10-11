@@ -54,7 +54,7 @@ apmw sanitize               # sanitize for every known platform
 | `-g, --global` | Sanitize the platform's global agent install directory instead of the project dir |
 | `-s, --source` | Also inject `permission:` blocks into source agent files under `packages/` |
 | `-y, --yes` | (`update` only) Skip consent prompt |
-| `--dry-run` | (`update` only) Preview changes without writing |
+| `--dry-run` | `update`: preview apm changes without writing; `sanitize`: print a diff per agent file instead of writing |
 
 `apmw install`/`update` require `apm` to be installed and on `PATH`.  
 `apmw sanitize` operates only on local files and does not invoke `apm`.
@@ -79,15 +79,16 @@ apmw install all@apm-hub -g -p copilot
 `apmw install` calls `apm install -g` (which deploys to global paths) and then
 sanitizes all agent files in those paths for the target platform.
 
-**Global agent paths per platform:**
+**Global agent paths per platform** (where `apm install -g` writes, verified with apm 0.33;
+the second entry is a fallback for hand-made installs):
 
-| Platform       | Linux / macOS                                    | Windows                                     |
-| :------------- | :----------------------------------------------- | :------------------------------------------ |
-| OpenCode       | `~/.config/opencode/agents/`                     | `%APPDATA%\opencode\agents\`                |
-| Claude Code    | `~/.claude/agents/` · `~/.config/claude/agents/` | `%APPDATA%\Claude\agents\`                  |
-| GitHub Copilot | `~/.config/github-copilot/agents/`               | `%APPDATA%\GitHub Copilot\agents\`          |
-| Cursor         | `~/.cursor/agents/`                              | `%APPDATA%\Cursor\agents\`                  |
-| Codex          | `~/.codex/agents/`                               | `%APPDATA%\Codex\agents\`                   |
+| Platform       | Linux / macOS                                               | Windows                                                        |
+| :------------- | :---------------------------------------------------------- | :------------------------------------------------------------- |
+| OpenCode       | `~/.config/opencode/agents/`                                | `%USERPROFILE%\.config\opencode\agents\` · `%APPDATA%\opencode\agents\` |
+| Claude Code    | `~/.claude/agents/` · `~/.config/claude/agents/`            | `%USERPROFILE%\.claude\agents\` · `%APPDATA%\Claude\agents\`   |
+| GitHub Copilot | `~/.copilot/agents/` · `~/.config/github-copilot/agents/`   | `%USERPROFILE%\.copilot\agents\` · `%APPDATA%\GitHub Copilot\agents\` |
+| Cursor         | `~/.cursor/agents/`                                         | `%APPDATA%\Cursor\agents\`                                     |
+| Codex          | `~/.codex/agents/`                                          | `%APPDATA%\Codex\agents\`                                      |
 
 ### Transitive MCP server definitions
 
@@ -129,14 +130,25 @@ platform-specific additions via a reserved `metadata:` key.
 | :--------------- | :-----: | :------: | :---------: | :------------: |
 | `name`           |    ✅    |    ✅     |      ✅      |       ✅        |
 | `description`    |    ✅    |    ✅     |      ✅      |       ✅        |
-| `tools`          |    ✅    |    ❌     |      ✅ *    |       ✅        |
-| `mode`           |    ✅    |    ❌     |      ❌      |       ❌        |
+| `tools`          |    ✅    |    ❌ †   |      ✅ *    |       ✅        |
+| `mode`           |    ✅    |    ✅ †   |      ❌      |       ❌        |
 | `steps`          |    ✅    |    ❌     |      ❌      |       ❌        |
 | `color`          |    ✅    |    ❌     |      ❌      |       ❌        |
-| `permission`     |    ❌    |    ✅     |      ❌      |       ❌        |
+| `permission`     |    ❌    |    ✅ †   |      ❌      |       ❌        |
 | `user-invocable` |    ✅    |    ❌     |      ❌      |       ❌        |
-| `model`          |    ✅    |    ✅     |      ❌      |       ✅        |
+| `model`          |    ✅    |    ✅ †   |      ✅ *    |       ✅        |
+| `skills`         |    ❌    |    ❌     |      ✅ *    |       ❌        |
 | `agents`         |    ✅    |    ❌     |      ❌      |       ✅        |
+
+\* Claude Code reads `tools`, `model` and `skills` from `metadata.claude` (the top-level Copilot
+values are stripped because the tool names and model ids differ).
+† OpenCode reads `mode`, `model` and `permission` from `metadata.opencode`; its list-form `tools`
+is rejected at load time, so `tools` is always stripped.
+
+The four agents shipped by apm-hub (`dev-workflow`, `explorer`, `reviewer`, `implementer`) are the
+reference fixtures: `tests/fixtures/agents/*.agent.md` with the expected output per platform under
+`tests/fixtures/expected/<platform>/`. `apmw sanitize --dry-run -p <platform>` prints the diff
+without writing.
 
 *Claude Code uses different tool identifiers than Copilot (`Bash` vs `run_in_terminal`, etc.).
 
