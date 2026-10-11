@@ -43,21 +43,24 @@ def _load_target_strip_fields() -> dict[str, list[str]]:
 
 TARGET_STRIP_FIELDS = _load_target_strip_fields()
 
+# Verified against apm 0.33 `apm install -g` (sandboxed HOME, 2026-10-11): it writes
+# ~/.claude/agents, ~/.config/opencode/agents and ~/.copilot/agents on every OS;
+# the older vendor-specific dirs stay as fallbacks for hand-made installs.
 GLOBAL_PATHS: dict[str, dict[str, list[str]]] = {
     "opencode": {
         "Linux": ["~/.config/opencode/agents"],
-        "Darwin": ["~/Library/Application Support/opencode/agents"],
-        "Windows": ["%APPDATA%\\opencode\\agents"],
+        "Darwin": ["~/.config/opencode/agents", "~/Library/Application Support/opencode/agents"],
+        "Windows": ["%USERPROFILE%\\.config\\opencode\\agents", "%APPDATA%\\opencode\\agents"],
     },
     "copilot": {
-        "Linux": ["~/.config/github-copilot/agents"],
-        "Darwin": ["~/Library/Application Support/github-copilot/agents"],
-        "Windows": ["%APPDATA%\\GitHub Copilot\\agents"],
+        "Linux": ["~/.copilot/agents", "~/.config/github-copilot/agents"],
+        "Darwin": ["~/.copilot/agents", "~/Library/Application Support/github-copilot/agents"],
+        "Windows": ["%USERPROFILE%\\.copilot\\agents", "%APPDATA%\\GitHub Copilot\\agents"],
     },
     "claude": {
         "Linux": ["~/.claude/agents", "~/.config/claude/agents"],
-        "Darwin": ["~/Library/Application Support/claude/agents"],
-        "Windows": ["%APPDATA%\\Claude\\agents"],
+        "Darwin": ["~/.claude/agents", "~/Library/Application Support/claude/agents"],
+        "Windows": ["%USERPROFILE%\\.claude\\agents", "%APPDATA%\\Claude\\agents"],
     },
     "cursor": {
         "Linux": ["~/.cursor/agents", "~/.config/cursor/agents"],
