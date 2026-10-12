@@ -20,7 +20,7 @@ features:
   - title: Global or per project
     details: Sanitize the global agent directories of every platform on a machine, or the .claude, .opencode and .github folders of one repository.
   - title: Single-file executables
-    details: Linux, macOS and Windows builds without a Python environment on every GitHub release; pipx and uvx otherwise.
+    details: Linux, macOS and Windows builds without a Python environment on every GitHub release; pipx, uv tool or uvx otherwise.
 ---
 
 ```bash
