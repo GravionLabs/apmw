@@ -9,7 +9,7 @@ metadata:
     model: sonnet
   opencode:
     mode: subagent
-    model: anthropic/claude-sonnet-4-5
+    model: anthropic/claude-sonnet-5-5
     permission:
       read: allow
       glob: allow

@@ -2,7 +2,7 @@
 name: reviewer
 description: Read-only review of a diff for one dimension (correctness, security, conventions, tests); may run the test suite. Returns findings as JSON. Used by review-fanout.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: anthropic/claude-sonnet-5-5
 permission:
   read: allow
   glob: allow

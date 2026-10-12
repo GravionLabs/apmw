@@ -36,7 +36,7 @@ Whether a platform actually supports a kept field is up to the platform. To give
 field the table strips (for example `tools` or `model` for Claude Code, `permission` for
 OpenCode), put it under `metadata.<platform>`.
 
-The four agents shipped by apm-hub (`lead`, `explorer`, `reviewer`, `implementer`) are the
+The four agents shipped by apm-hub (`orchestrator`, `explorer`, `reviewer`, `implementer`) are the
 reference fixtures: [`tests/fixtures/agents/*.agent.md`](https://github.com/GravionLabs/apmw/tree/main/tests/fixtures/agents) with the expected output per platform under
 `tests/fixtures/expected/<platform>/`. `apmw sanitize --dry-run -p <platform>` prints the diff
 without writing.
@@ -49,11 +49,11 @@ lines into the sanitized frontmatter, and strips `metadata:` itself from all
 outputs. **Metadata wins on conflict** — if both the top level and
 `metadata.opencode` define `permission:`, the metadata version is used.
 
-The example is the `lead` fixture (description shortened):
+The example is the `orchestrator` fixture (description shortened):
 
 ```yaml
 ---
-name: lead
+name: orchestrator
 description: Issue orchestrator. Modes plan|implement|full <issue>. …
 tools: ['agent', 'read', 'search', 'execute']
 user-invocable: true
@@ -113,20 +113,20 @@ tools like `Skill`, belongs in `metadata.<platform>`.
 
 ## What each platform receives
 
-**`.github/agents/lead.agent.md`** — Copilot output (`metadata:` stripped, all else kept):
+**`.github/agents/orchestrator.agent.md`** — Copilot output (`metadata:` stripped, all else kept):
 ```yaml
 ---
-name: lead
+name: orchestrator
 description: Issue orchestrator. Modes plan|implement|full <issue>. …
 tools: ['agent', 'read', 'search', 'execute']
 user-invocable: true
 ---
 ```
 
-**`.opencode/agents/lead.md`** — `mode` and `permission` injected from `metadata.opencode`; Copilot-only fields stripped:
+**`.opencode/agents/orchestrator.md`** — `mode` and `permission` injected from `metadata.opencode`; Copilot-only fields stripped:
 ```yaml
 ---
-name: lead
+name: orchestrator
 description: Issue orchestrator. Modes plan|implement|full <issue>. …
 mode: primary
 permission:
@@ -144,10 +144,10 @@ permission:
 ---
 ```
 
-**`.claude/agents/lead.md`** — Claude-native `tools` and `model` injected from `metadata.claude`; all incompatible fields stripped:
+**`.claude/agents/orchestrator.md`** — Claude-native `tools` and `model` injected from `metadata.claude`; all incompatible fields stripped:
 ```yaml
 ---
-name: lead
+name: orchestrator
 description: Issue orchestrator. Modes plan|implement|full <issue>. …
 tools: [Agent, Read, Grep, Glob, Bash, Skill, AskUserQuestion]
 model: inherit
