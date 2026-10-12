@@ -1,0 +1,21 @@
+{
+  "name": "@apmw/site",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The documentation site: docs/guide as a website (VitePress), published on GitHub Pages.",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "typescript": "~6.0.2",
+    "vite": "^7.3.7",
+    "vitepress": "^1.6.4",
+    "vitest": "^5.0.0"
+  }
+}
