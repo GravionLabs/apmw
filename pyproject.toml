@@ -1,15 +1,41 @@
 [project]
 name = "apmw"
+# Placeholder: CI injects the version computed by GitVersion (GravionLabs/ci/python/build).
 version = "0.1.0"
 description = "Cross-platform wrapper for the apm CLI — sanitizes agent frontmatter per target"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Jérôme Kaufmann" }]
 requires-python = ">=3.10"
 dependencies = []
+keywords = ["apm", "agents", "claude-code", "copilot", "opencode", "frontmatter", "cli"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Build Tools",
+]
+
+[project.urls]
+Homepage = "https://gravionlabs.github.io/apmw/"
+Documentation = "https://gravionlabs.github.io/apmw/"
+Repository = "https://github.com/GravionLabs/apmw"
+Changelog = "https://github.com/GravionLabs/apmw/blob/main/CHANGELOG.md"
+Issues = "https://github.com/GravionLabs/apmw/issues"
 
 [project.scripts]
 apmw = "apmw:main"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [dependency-groups]

@@ -5,7 +5,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.2.0] — 2026-10-11
+## [0.1.1] — 2026-10-11
+
+Planned as 0.2.0; GitVersion published the merge of `release/0.2` as 0.1.1 because `next-version` still said 0.1.0.
 
 ### Bug Fixes
 - Correct the Copilot global agent path and verify global deploy paths (#7) (#9)
