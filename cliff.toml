@@ -24,12 +24,17 @@ body = """
 """
 footer = ""
 trim = true
+postprocessors = [
+  # GitVersion published release/0.2 as 0.1.1; keep the note across regeneration.
+  { pattern = '(## \[0\.1\.1\] — [0-9-]+\n)', replace = "$1\nPlanned as 0.2.0; GitVersion published the merge of `release/0.2` as 0.1.1 because `next-version` still said 0.1.0.\n" },
+]
 
 [git]
 conventional_commits = true
 filter_unconventional = true
 split_commits = false
 commit_parsers = [
+  { message = "^docs?: update CHANGELOG", skip = true },
   { message = "^feat", group = "Features" },
   { message = "^fix", group = "Bug Fixes" },
   { message = "^doc", group = "Documentation" },

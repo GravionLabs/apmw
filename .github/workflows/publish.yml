@@ -106,12 +106,17 @@ jobs:
       - build-executables
     permissions:
       contents: write
+      issues: write
+      pull-requests: read
     steps:
+      # gh-release checks out the full history itself (fetch-depth: 0) and closes the delivered issues.
       - name: Create GitHub Release
         uses: GravionLabs/ci/versioning/gh-release@main
         with:
           version: ${{ needs.determine-version.outputs.semver }}
           tag-prefix: v
+          cliff-config: cliff.toml
+          update-changelog: 'true'
 
       - name: Download executable artifacts
         uses: actions/download-artifact@v4
