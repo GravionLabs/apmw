@@ -219,7 +219,7 @@ def test_claude_pipeline_injects_model_from_metadata(agents_dir_meta: Path):
     fm = frontmatter(agents_dir_meta / "dev-workflow.md")
     assert "model: claude-sonnet-4-5" in fm
     assert "metadata:" not in fm
-    assert "tools:" not in fm
+    assert "tools: [Agent, Read, Grep, Glob]" in fm
 
 
 def test_pipeline_no_metadata_platform_still_strips(agents_dir_meta: Path):
