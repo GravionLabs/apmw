@@ -79,6 +79,37 @@ metadata:
 Agent body — unchanged across all platforms.
 ```
 
+## Missing `metadata:` — derived fields
+
+For Claude Code and OpenCode, `apmw` decides per field in this order:
+
+1. `metadata.<platform>` defines the field → that value is used.
+2. A top-level field the platform keeps (OpenCode `permission`, Claude Code `tools` or `model` that
+   already use Claude names) → it stays as it is. This also makes a second `apmw sanitize` run on
+   an already sanitized directory a no-op.
+3. Otherwise the field is **derived from the Copilot `tools:` list**.
+4. No `tools:` in the source → nothing is added.
+
+The Copilot aliases map like this (the Claude and OpenCode names of a tool are accepted as synonyms):
+
+| Copilot `tools` | Claude Code `tools` | OpenCode `permission` |
+| :-------------- | :------------------ | :-------------------- |
+| `read`          | `Read`              | `read`                |
+| `search`        | `Grep`, `Glob`      | `grep`, `glob`        |
+| `edit`          | `Edit`, `Write`     | `edit`                |
+| `execute`       | `Bash`              | `bash`                |
+| `agent`         | `Agent`             | `task`                |
+| `web`           | `WebFetch`, `WebSearch` | `webfetch`        |
+| `todo`          | `TodoWrite`         | —                     |
+
+Claude Code gets `tools: [Agent, Read, Grep, Glob, Bash]` for `['agent', 'read', 'search', 'execute']`.
+`model` is never derived; Claude inherits the session model. OpenCode gets a `permission:` block
+that lists `read`, `glob`, `grep`, `edit`, `bash`, `task` and `webfetch`: listed tools `allow`, the
+rest `deny`, because the Copilot list is an allowlist. Entries without a mapping, such as MCP tools
+(`github/*`), are skipped and named in the output line (`derived tools (unmapped: github/*)`).
+Anything these tables cannot express, such as `skill` or `question` permissions or extra Claude
+tools like `Skill`, belongs in `metadata.<platform>`.
+
 ## What each platform receives
 
 **`.github/agents/dev-workflow.agent.md`** — Copilot output (`metadata:` stripped, all else kept):

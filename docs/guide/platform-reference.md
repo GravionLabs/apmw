@@ -25,6 +25,7 @@ For each `*.md` file in the target agent directory, `apmw` runs:
 1. **Extract** — find `metadata.<platform>` and de-indent its content lines.
 2. **Strip** — remove fields in the platform's strip list (including `metadata`).
 3. **Inject** — if step 1 produced lines: strip any conflicting top-level fields, then append the extracted lines. Metadata wins.
+   Missing `tools` (Claude Code) or `permission` (OpenCode) are derived from the Copilot `tools:` list, see [Authoring multi-target agents](authoring-agents.md#missing-metadata-derived-fields).
 4. **Rewrite** — write the file only if the frontmatter changed.
 
 ## OpenCode `permission:` reference
