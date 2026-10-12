@@ -1,6 +1,6 @@
 # apmw
 
-Cross-platform wrapper CLI for [apm](https://github.com/GravionLabs). `apm install`/`apm update`
+Cross-platform wrapper CLI for [apm](https://github.com/microsoft/apm). `apm install`/`apm update`
 deploy platform-neutral skills cleanly, but agent files carry platform-specific frontmatter
 (`permission`, `mode`, `tools`, `model`, etc.) that each target — Claude Code, OpenCode, GitHub
 Copilot, Cursor, Codex — interprets differently. `apmw` runs the real `apm` command and then

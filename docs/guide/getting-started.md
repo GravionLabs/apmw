@@ -5,8 +5,13 @@ Install `apmw`, run it once, and know its flags.
 ## Install
 
 ```bash
-pipx install apmw
-# or
+pipx install apmw           # or: uv tool install apmw
+apmw install -p claude
+```
+
+To run it once without installing, use `uvx`; nothing stays on your `PATH`:
+
+```bash
 uvx apmw install -p claude
 ```
 
@@ -47,5 +52,12 @@ apmw sanitize               # sanitize for every known platform
 | `-y, --yes` | (`update` only) Skip consent prompt |
 | `--dry-run` | `update`: preview apm changes without writing; `sanitize`: print a diff per agent file instead of writing |
 
-`apmw install`/`update` require `apm` to be installed and on `PATH`.  
+`apmw install`/`update` require `apm` to be installed and on `PATH`.
 `apmw sanitize` operates only on local files and does not invoke `apm`.
+
+Arguments `apmw` does not know are passed on to `apm`, so packages and any other `apm` option work
+as usual (`-g` is forwarded too):
+
+```bash
+apmw install all@apm-hub -g -p claude   # runs: apm install -g all@apm-hub, then sanitizes
+```

@@ -4,8 +4,7 @@ Strip rules, the processing pipeline, and the frontmatter each platform accepts.
 
 ## Strip rules
 
-The strip rules are loaded from `src/apmw/data/agent-strip-fields.json` and
-must be kept in sync with `apm-hub`'s `config/agent-strip-fields.json`:
+The strip rules are loaded from `src/apmw/data/agent-strip-fields.json`, the only source of truth:
 
 ```json
 {
@@ -26,6 +25,7 @@ For each `*.md` file in the target agent directory, `apmw` runs:
 1. **Extract** — find `metadata.<platform>` and de-indent its content lines.
 2. **Strip** — remove fields in the platform's strip list (including `metadata`).
 3. **Inject** — if step 1 produced lines: strip any conflicting top-level fields, then append the extracted lines. Metadata wins.
+   Missing `tools` (Claude Code) or `permission` (OpenCode) are derived from the Copilot `tools:` list, see [Authoring multi-target agents](authoring-agents.md#derived-fields-when-metadata-is-missing).
 4. **Rewrite** — write the file only if the frontmatter changed.
 
 ## OpenCode `permission:` reference

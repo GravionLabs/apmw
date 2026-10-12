@@ -18,10 +18,8 @@ TARGET_DIRS = {
     "codex": ".codex",
 }
 
-# Which frontmatter fields to drop per target platform. GravionLabs/apm-hub
-# keeps an equivalent copy at config/agent-strip-fields.json (shared with
-# src/generators/agent-target-generator.ts there) — update both if the set
-# of fields per platform changes.
+# Which frontmatter fields to drop per target platform; the JSON file next to
+# this module is the only source of truth.
 #
 # Note on "claude": Claude Code accepts only name/description/tools/model;
 # source `tools` arrays use Copilot names and `model` values are rarely
@@ -79,6 +77,35 @@ TOOLS_ARRAY_RE = re.compile(r'^tools:\s*\[')
 TOOLS_BLOCK_RE = re.compile(r'^tools:\s*$')
 PERMISSION_RE = re.compile(r'^permission:')
 METADATA_RE = re.compile(r'^metadata\s*:')
+
+# Copilot tool aliases -> Claude Code tool names / OpenCode permission keys.
+CLAUDE_TOOLS = {
+    "execute": ["Bash"],
+    "read": ["Read"],
+    "edit": ["Edit", "Write"],
+    "search": ["Grep", "Glob"],
+    "agent": ["Agent"],
+    "web": ["WebFetch", "WebSearch"],
+    "todo": ["TodoWrite"],
+}
+OPENCODE_PERMISSIONS = {
+    "execute": ["bash"],
+    "read": ["read"],
+    "edit": ["edit"],
+    "search": ["glob", "grep"],
+    "agent": ["task"],
+    "web": ["webfetch"],
+}
+OPENCODE_PERMISSION_ORDER = ["read", "glob", "grep", "edit", "bash", "task", "webfetch"]
+TOOL_SYNONYMS = {
+    "shell": "execute", "bash": "execute", "powershell": "execute",
+    "notebookread": "read",
+    "multiedit": "edit", "write": "edit", "notebookedit": "edit",
+    "grep": "search", "glob": "search",
+    "custom-agent": "agent", "task": "agent", "runsubagent": "agent",
+    "websearch": "web", "webfetch": "web",
+    "todowrite": "todo",
+}
 
 
 def resolve_path(raw: str) -> Path:
@@ -204,29 +231,84 @@ def strip_fields(fm_lines: list[str], fields: list[str]) -> list[str] | None:
     return new_lines
 
 
+def parse_tools(fm_lines: list[str]) -> list[str]:
+    names: list[str] = []
+    in_block = False
+    for line in fm_lines:
+        if in_block:
+            m = re.match(r'^\s+-\s+(.+)$', line)
+            if not m:
+                break
+            names.append(m.group(1).strip().strip("'\""))
+        elif TOOLS_ARRAY_RE.match(line):
+            rest = line[TOOLS_ARRAY_RE.match(line).end():].rstrip()
+            if rest.endswith("]"):
+                rest = rest[:-1]
+            return [n.strip().strip("'\"") for n in rest.split(",") if n.strip()]
+        elif TOOLS_BLOCK_RE.match(line):
+            in_block = True
+    return names
+
+
+def tool_aliases(fm_lines: list[str]) -> tuple[list[str], list[str]]:
+    aliases: list[str] = []
+    unmapped: list[str] = []
+    for name in parse_tools(fm_lines):
+        key = TOOL_SYNONYMS.get(name.lower(), name.lower())
+        if key not in CLAUDE_TOOLS:
+            unmapped.append(name)
+        elif key not in aliases:
+            aliases.append(key)
+    return aliases, unmapped
+
+
+CLAUDE_MODEL_RE = re.compile(r'^model\s*:\s*(inherit|sonnet|opus|haiku|claude-[\w.\-]+)\s*$')
+
+
+def native_claude_fields(fm_lines: list[str], platform: str | None) -> set[str]:
+    if platform != "claude":
+        return set()
+    native: set[str] = set()
+    names = parse_tools(fm_lines)
+    if names and all(n[:1].isupper() for n in names):
+        native.add("tools")
+    if any(CLAUDE_MODEL_RE.match(l) for l in fm_lines):
+        native.add("model")
+    return native
+
+
+def effective_fields(fm_lines: list[str], fields: list[str], platform: str | None) -> list[str]:
+    native = native_claude_fields(fm_lines, platform)
+    return [f for f in fields if f not in native]
+
+
+def derive_platform_fields(
+    fm_lines: list[str], platform: str | None, meta_lines: list[str]
+) -> tuple[list[str], list[str]]:
+    defined = {m.group(1) for l in meta_lines if (m := re.match(r'^(\S+)\s*:', l))}
+    aliases, unmapped = tool_aliases(fm_lines)
+    if platform == "claude" and "tools" not in defined | native_claude_fields(fm_lines, platform) and aliases:
+        names = [n for a in aliases for n in CLAUDE_TOOLS[a]]
+        return [f"tools: [{', '.join(names)}]"], unmapped
+    if platform == "opencode" and "permission" not in defined and not any(PERMISSION_RE.match(l) for l in fm_lines):
+        allowed = {p for a in aliases for p in OPENCODE_PERMISSIONS.get(a, [])}
+        if allowed:
+            unmapped += [a for a in aliases if a not in OPENCODE_PERMISSIONS]
+            return (
+                ["permission:"] + [
+                    f"  {p}: {'allow' if p in allowed else 'deny'}" for p in OPENCODE_PERMISSION_ORDER
+                ],
+                unmapped,
+            )
+    return [], []
+
+
 def add_permission_block(fm_lines: list[str]) -> list[str] | None:
     for line in fm_lines:
         if PERMISSION_RE.match(line):
             return None
 
-    tool_names: list[str] = []
-    in_block = False
-    for line in fm_lines:
-        if in_block:
-            m = re.match(r'^\s+-\s+(.+)$', line)
-            if m:
-                tool_names.append(m.group(1).strip())
-            else:
-                break
-        elif TOOLS_ARRAY_RE.match(line):
-            m = TOOLS_ARRAY_RE.match(line)
-            rest = line[m.end():]
-            if rest.endswith("]"):
-                rest = rest[:-1]
-            tool_names = [t.strip().strip("'\"") for t in rest.split(",") if t.strip()]
-            break
-        elif TOOLS_BLOCK_RE.match(line):
-            in_block = True
+    tool_names = parse_tools(fm_lines)
 
     if not tool_names:
         return None
@@ -308,10 +390,11 @@ def rewrite_file(path: Path, new_fm_lines: list[str], original_lines: list[str],
 
 def sanitize_frontmatter(fm_lines: list[str], fields: list[str], platform: str | None = None) -> list[str]:
     platform_meta = extract_platform_metadata(fm_lines, platform) if platform else []
-    stripped = strip_fields(fm_lines, fields)
+    derived, _ = derive_platform_fields(fm_lines, platform, platform_meta)
+    stripped = strip_fields(fm_lines, effective_fields(fm_lines, fields, platform))
     new_fm = stripped if stripped is not None else list(fm_lines)
-    if platform_meta:
-        new_fm = inject_metadata_fields(new_fm, platform_meta)
+    if platform_meta or derived:
+        new_fm = inject_metadata_fields(new_fm, platform_meta + derived)
     return new_fm
 
 
@@ -331,6 +414,7 @@ def sanitize_installed(
         fm_lines = lines[1:fm_end]
 
         platform_meta = extract_platform_metadata(fm_lines, platform) if platform else []
+        derived, unmapped = derive_platform_fields(fm_lines, platform, platform_meta)
         new_fm = sanitize_frontmatter(fm_lines, fields, platform)
 
         if new_fm == fm_lines:
@@ -343,13 +427,16 @@ def sanitize_installed(
             rewrite_file(f, new_fm, lines, fm_end)
         changed += 1
         name = f.stem
-        removed = [k for k in fields if any(re.match(r'^' + re.escape(k) + r'\s*:', l) for l in fm_lines)]
+        removed = [k for k in effective_fields(fm_lines, fields, platform) if any(re.match(r'^' + re.escape(k) + r'\s*:', l) for l in fm_lines)]
         injected = [m.group(1) for l in platform_meta if (m := re.match(r'^(\S+)\s*:', l))]
         parts = []
         if removed:
             parts.append(f"removed {', '.join(removed)}")
         if injected:
             parts.append(f"injected {', '.join(injected)}")
+        if derived:
+            note = f" (unmapped: {', '.join(unmapped)})" if unmapped else ""
+            parts.append(f"derived {derived[0].split(':')[0]}{note}")
         print(f"  [strip]   {name} — {'; '.join(parts)}")
 
     return changed

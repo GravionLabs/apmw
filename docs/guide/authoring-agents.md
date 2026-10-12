@@ -9,31 +9,36 @@ platform-specific additions via a reserved `metadata:` key.
 
 ## Field compatibility
 
+✅ means `apmw` keeps the top-level field for that platform, ❌ means it strips it (rules in
+[Platform reference](platform-reference.md)). Fields not listed are never stripped.
+
 | Field            | Copilot | OpenCode | Claude Code | Cursor / Codex |
 | :--------------- | :-----: | :------: | :---------: | :------------: |
 | `name`           |    ✅    |    ✅     |      ✅      |       ✅        |
 | `description`    |    ✅    |    ✅     |      ✅      |       ✅        |
-| `tools`          |    ✅    |    ❌ †   |      ✅ *    |       ✅        |
-| `mode`           |    ✅    |    ✅ †   |      ❌      |       ❌        |
-| `steps`          |    ✅    |    ❌     |      ❌      |       ❌        |
-| `color`          |    ✅    |    ❌     |      ❌      |       ❌        |
-| `permission`     |    ❌    |    ✅ †   |      ❌      |       ❌        |
-| `user-invocable` |    ✅    |    ❌     |      ❌      |       ❌        |
-| `model`          |    ✅    |    ✅ †   |      ✅ *    |       ✅        |
-| `skills`         |    ❌    |    ❌     |      ✅ *    |       ❌        |
+| `tools`          |    ✅    |    ❌ †   |      ❌ *    |       ✅        |
+| `mode`           |    ❌    |    ✅     |      ❌      |       ❌        |
+| `steps`          |    ❌    |    ✅     |      ❌      |       ❌        |
+| `color`          |    ❌    |    ✅     |      ❌      |       ❌        |
+| `permission`     |    ❌    |    ✅     |      ❌      |       ❌        |
+| `task`           |    ❌    |    ✅     |      ✅      |       ✅        |
+| `user-invocable` |    ✅    |    ❌     |      ❌      |       ✅        |
+| `model`          |    ✅    |    ✅     |      ❌ *    |       ✅        |
 | `agents`         |    ✅    |    ❌     |      ❌      |       ✅        |
+| `skills`         |    ✅    |    ✅     |      ✅      |       ✅        |
 
-\* Claude Code reads `tools`, `model` and `skills` from `metadata.claude` (the top-level Copilot
-values are stripped because the tool names and model ids differ).
-† OpenCode reads `mode`, `model` and `permission` from `metadata.opencode`; its list-form `tools`
-is rejected at load time, so `tools` is always stripped.
+\* Claude Code uses different tool identifiers and model ids than Copilot (`Bash` vs
+`run_in_terminal`), so `tools` and `model` come only from `metadata.claude`.
+† OpenCode rejects list-form `tools` at load time, so `tools` is always stripped.
+
+Whether a platform actually supports a kept field is up to the platform. To give one platform a
+field the table strips (for example `tools` or `model` for Claude Code, `permission` for
+OpenCode), put it under `metadata.<platform>`.
 
 The four agents shipped by apm-hub (`dev-workflow`, `explorer`, `reviewer`, `implementer`) are the
 reference fixtures: [`tests/fixtures/agents/*.agent.md`](https://github.com/GravionLabs/apmw/tree/main/tests/fixtures/agents) with the expected output per platform under
 `tests/fixtures/expected/<platform>/`. `apmw sanitize --dry-run -p <platform>` prints the diff
 without writing.
-
-*Claude Code uses different tool identifiers than Copilot (`Bash` vs `run_in_terminal`, etc.).
 
 ## `metadata:` — platform-specific overrides
 
@@ -43,42 +48,67 @@ lines into the sanitized frontmatter, and strips `metadata:` itself from all
 outputs. **Metadata wins on conflict** — if both the top level and
 `metadata.opencode` define `permission:`, the metadata version is used.
 
+The example is the `dev-workflow` fixture (description shortened):
+
 ```yaml
 ---
 name: dev-workflow
-description: "Dev workflow orchestrator."
-# Copilot-native fields — kept as-is in the Copilot output
-mode: all
-steps: 40
-color: primary
-tools: ['agent', 'read', 'search']
+description: Issue orchestrator. Modes plan|implement|full <issue>. …
+tools: ['agent', 'read', 'search', 'execute']
 user-invocable: true
-# Platform-specific overrides (never appear in any output file)
 metadata:
+  claude:
+    tools: [Agent, Read, Grep, Glob, Bash, Skill, AskUserQuestion]
+    model: inherit
   opencode:
+    mode: primary
     permission:
       read: allow
-      edit: deny
       glob: allow
       grep: allow
-      bash:
-        "*": deny
+      edit: deny
       task: allow
       skill: allow
-      webfetch: allow
       question: allow
-  claude:
-    tools:
-      - Bash
-      - Read
-      - Glob
-      - Grep
-      - WebFetch
-      - Task
+      bash:
+        "git *": allow
+        "gh *": allow
+        "*": ask
 ---
 
 Agent body — unchanged across all platforms.
 ```
+
+## Derived fields when metadata is missing
+
+For Claude Code and OpenCode, `apmw` decides per field in this order:
+
+1. `metadata.<platform>` defines the field → that value is used.
+2. A top-level field the platform keeps (OpenCode `permission`, Claude Code `tools` or `model` that
+   already use Claude names) → it stays as it is. This also makes a second `apmw sanitize` run on
+   an already sanitized directory a no-op.
+3. Otherwise the field is **derived from the Copilot `tools:` list**.
+4. No `tools:` in the source → nothing is added.
+
+The Copilot aliases map like this (the Claude and OpenCode names of a tool are accepted as synonyms):
+
+| Copilot `tools` | Claude Code `tools` | OpenCode `permission` |
+| :-------------- | :------------------ | :-------------------- |
+| `read`          | `Read`              | `read`                |
+| `search`        | `Grep`, `Glob`      | `grep`, `glob`        |
+| `edit`          | `Edit`, `Write`     | `edit`                |
+| `execute`       | `Bash`              | `bash`                |
+| `agent`         | `Agent`             | `task`                |
+| `web`           | `WebFetch`, `WebSearch` | `webfetch`        |
+| `todo`          | `TodoWrite`         | —                     |
+
+Claude Code gets `tools: [Agent, Read, Grep, Glob, Bash]` for `['agent', 'read', 'search', 'execute']`.
+`model` is never derived; Claude inherits the session model. OpenCode gets a `permission:` block
+that lists `read`, `glob`, `grep`, `edit`, `bash`, `task` and `webfetch`: listed tools `allow`, the
+rest `deny`, because the Copilot list is an allowlist. Entries without a mapping, such as MCP tools
+(`github/*`), are skipped and named in the output line (`derived tools (unmapped: github/*)`).
+Anything these tables cannot express, such as `skill` or `question` permissions or extra Claude
+tools like `Skill`, belongs in `metadata.<platform>`.
 
 ## What each platform receives
 
@@ -86,48 +116,39 @@ Agent body — unchanged across all platforms.
 ```yaml
 ---
 name: dev-workflow
-description: "Dev workflow orchestrator."
-mode: all
-steps: 40
-color: primary
-tools: ['agent', 'read', 'search']
+description: Issue orchestrator. Modes plan|implement|full <issue>. …
+tools: ['agent', 'read', 'search', 'execute']
 user-invocable: true
 ---
 ```
 
-**`.opencode/agents/dev-workflow.md`** — `permission:` injected from `metadata.opencode`; Copilot-only fields stripped by default:
+**`.opencode/agents/dev-workflow.md`** — `mode` and `permission` injected from `metadata.opencode`; Copilot-only fields stripped:
 ```yaml
 ---
 name: dev-workflow
-description: "Dev workflow orchestrator."
-mode: all
-steps: 40
-color: primary
+description: Issue orchestrator. Modes plan|implement|full <issue>. …
+mode: primary
 permission:
   read: allow
-  edit: deny
   glob: allow
   grep: allow
-  bash:
-    "*": deny
+  edit: deny
   task: allow
   skill: allow
-  webfetch: allow
   question: allow
+  bash:
+    "git *": allow
+    "gh *": allow
+    "*": ask
 ---
 ```
 
-**`.claude/agents/dev-workflow.md`** — Claude-native `tools:` injected from `metadata.claude`; all incompatible fields stripped:
+**`.claude/agents/dev-workflow.md`** — Claude-native `tools` and `model` injected from `metadata.claude`; all incompatible fields stripped:
 ```yaml
 ---
 name: dev-workflow
-description: "Dev workflow orchestrator."
-tools:
-  - Bash
-  - Read
-  - Glob
-  - Grep
-  - WebFetch
-  - Task
+description: Issue orchestrator. Modes plan|implement|full <issue>. …
+tools: [Agent, Read, Grep, Glob, Bash, Skill, AskUserQuestion]
+model: inherit
 ---
 ```
