@@ -7,9 +7,10 @@ metadata:
   claude:
     tools: [Read, Edit, Write, Grep, Glob, Bash, Skill]
     skills: [implementation]
-    model: inherit
+    model: sonnet
   opencode:
     mode: subagent
+    model: anthropic/claude-sonnet-5-5
     permission:
       read: allow
       glob: allow

@@ -2,6 +2,7 @@
 name: implementer
 description: Implements exactly one task or PBI in a fresh context with the implementation skill (tests included), runs build and tests, commits, writes a report file and replies in under 15 lines.
 mode: subagent
+model: anthropic/claude-sonnet-5-5
 permission:
   read: allow
   glob: allow

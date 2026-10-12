@@ -9,7 +9,7 @@ metadata:
     model: haiku
   opencode:
     mode: subagent
-    model: anthropic/claude-haiku-4-5
+    model: anthropic/claude-haiku-5-5
     permission:
       read: allow
       glob: allow

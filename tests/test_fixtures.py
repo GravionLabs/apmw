@@ -6,7 +6,7 @@ import pytest
 from apmw import TARGET_STRIP_FIELDS, main, sanitize_installed
 
 FIXTURES = Path(__file__).parent / "fixtures"
-AGENTS = ["lead", "explorer", "implementer", "reviewer"]
+AGENTS = ["orchestrator", "explorer", "implementer", "reviewer"]
 PLATFORMS = ["claude", "copilot", "opencode"]
 # installed file name per platform; apm keeps the Copilot suffix only for .github/.copilot
 INSTALLED_NAME = {"claude": "{name}.md", "copilot": "{name}.agent.md", "opencode": "{name}.md"}
@@ -51,8 +51,8 @@ def test_claude_gets_tools_model_and_skills(tmp_path: Path):
     assert "user-invocable:" not in explorer
     implementer = _frontmatter(d / "implementer.md")
     assert "skills: [implementation]" in implementer
-    assert "model: inherit" in implementer
-    assert "AskUserQuestion" in _frontmatter(d / "lead.md")
+    assert "model: sonnet" in implementer
+    assert "AskUserQuestion" in _frontmatter(d / "orchestrator.md")
 
 
 def test_opencode_gets_mode_model_permission_and_no_tools(tmp_path: Path):
@@ -63,9 +63,9 @@ def test_opencode_gets_mode_model_permission_and_no_tools(tmp_path: Path):
         assert "tools:" not in fm
         assert "user-invocable:" not in fm
         assert "permission:" in fm
-    assert "mode: primary" in _frontmatter(d / "lead.md")
+    assert "mode: primary" in _frontmatter(d / "orchestrator.md")
     assert "mode: subagent" in _frontmatter(d / "explorer.md")
-    assert "model: anthropic/claude-haiku-4-5" in _frontmatter(d / "explorer.md")
+    assert "model: anthropic/claude-haiku-5-5" in _frontmatter(d / "explorer.md")
     assert '"git diff*": allow' in _frontmatter(d / "reviewer.md")
 
 
