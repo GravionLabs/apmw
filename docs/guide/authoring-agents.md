@@ -57,6 +57,7 @@ name: orchestrator
 description: Issue orchestrator. Modes plan|implement|full <issue>. …
 tools: ['agent', 'read', 'search', 'execute']
 user-invocable: true
+disable-model-invocation: true
 metadata:
   claude:
     tools: [Agent, Read, Grep, Glob, Bash, Skill, AskUserQuestion]
@@ -120,6 +121,7 @@ name: orchestrator
 description: Issue orchestrator. Modes plan|implement|full <issue>. …
 tools: ['agent', 'read', 'search', 'execute']
 user-invocable: true
+disable-model-invocation: true
 ---
 ```
 
