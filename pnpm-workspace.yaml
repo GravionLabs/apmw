@@ -1,0 +1,13 @@
+packages:
+  - 'apps/*'
+
+# The pages of the documentation site are the files of `docs/`, outside any package, and VitePress
+# compiles them to code that imports `vue`: it must be found from the top folder (apps/site).
+publicHoistPattern:
+  - vue
+
+# Dependencies with install scripts must be listed here, or the install fails.
+strictDepBuilds: true
+allowBuilds:
+  # The platform binary of esbuild, which bundles the VitePress site.
+  esbuild: true
