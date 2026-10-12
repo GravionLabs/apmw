@@ -18,10 +18,8 @@ TARGET_DIRS = {
     "codex": ".codex",
 }
 
-# Which frontmatter fields to drop per target platform. GravionLabs/apm-hub
-# keeps an equivalent copy at config/agent-strip-fields.json (shared with
-# src/generators/agent-target-generator.ts there) — update both if the set
-# of fields per platform changes.
+# Which frontmatter fields to drop per target platform; the JSON file next to
+# this module is the only source of truth.
 #
 # Note on "claude": Claude Code accepts only name/description/tools/model;
 # source `tools` arrays use Copilot names and `model` values are rarely

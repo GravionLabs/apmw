@@ -4,8 +4,7 @@ Strip rules, the processing pipeline, and the frontmatter each platform accepts.
 
 ## Strip rules
 
-The strip rules are loaded from `src/apmw/data/agent-strip-fields.json` and
-must be kept in sync with `apm-hub`'s `config/agent-strip-fields.json`:
+The strip rules are loaded from `src/apmw/data/agent-strip-fields.json`, the only source of truth:
 
 ```json
 {

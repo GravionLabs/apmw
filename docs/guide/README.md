@@ -1,6 +1,6 @@
 # apmw user guide
 
-`apmw` wraps the [apm](https://github.com/GravionLabs/apm-hub) CLI: it runs the real `apm install`
+`apmw` wraps the [apm](https://github.com/microsoft/apm) CLI: it runs the real `apm install`
 or `apm update` and then rewrites the installed agent frontmatter for the platform you target, so
 one agent source file serves Claude Code, OpenCode, GitHub Copilot, Cursor and Codex.
 

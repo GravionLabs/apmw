@@ -6,7 +6,7 @@
 
 **[Documentation](https://gravionlabs.github.io/apmw/)** · [User guide on GitHub](docs/guide/README.md) · [Changelog](CHANGELOG.md)
 
-Cross-platform wrapper for the [apm](https://github.com/GravionLabs/apm-hub) CLI.
+Cross-platform wrapper for the [apm](https://github.com/microsoft/apm) CLI.
 
 `apm install` and `apm update` deploy platform-neutral skills cleanly, but agent files carry
 platform-specific frontmatter (`permission`, `mode`, `tools`, …) that each target — Claude Code,
@@ -16,8 +16,13 @@ command and then sanitizes the installed agent frontmatter for the platform you 
 ## Install
 
 ```bash
-pipx install apmw
-# or
+pipx install apmw           # or: uv tool install apmw
+apmw install -p claude
+```
+
+To run it once without installing, use `uvx`; nothing stays on your `PATH`:
+
+```bash
 uvx apmw install -p claude
 ```
 
