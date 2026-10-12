@@ -79,7 +79,7 @@ metadata:
 Agent body — unchanged across all platforms.
 ```
 
-## Missing `metadata:` — derived fields
+## Derived fields when metadata is missing
 
 For Claude Code and OpenCode, `apmw` decides per field in this order:
 
