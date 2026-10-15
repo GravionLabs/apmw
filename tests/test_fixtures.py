@@ -6,7 +6,7 @@ import pytest
 from apmw import TARGET_STRIP_FIELDS, main, sanitize_installed
 
 FIXTURES = Path(__file__).parent / "fixtures"
-AGENTS = ["dev-workflow", "explorer", "implementer", "reviewer"]
+AGENTS = ["dev-workflow", "explorer", "implementer", "reviewer", "issue-reader"]
 PLATFORMS = ["claude", "copilot", "opencode"]
 # installed file name per platform; apm keeps the Copilot suffix only for .github/.copilot
 INSTALLED_NAME = {"claude": "{name}.md", "copilot": "{name}.agent.md", "opencode": "{name}.md"}
