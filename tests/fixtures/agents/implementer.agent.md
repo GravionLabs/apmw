@@ -25,7 +25,7 @@ You implement one task or PBI handed to you by an orchestrator. You own the bran
 
 ## Rules
 
-1. Input: issue number and title, acceptance criteria, the branch to work on, the tech-stack JSON, the report path `.agents/<issue>/task-<n>-report.md` and (optionally) an exploration summary. Read the issue with `gh issue view <nr>` only if the input is incomplete.
+1. Input: issue number and title, acceptance criteria, the branch to work on, the path of the context file `.agents/<issue>/context.md` (integration branch, tech-stack JSON, exploration summary) and the report path `.agents/<issue>/task-<n>-report.md`. Read the context file first; read the PBI body in `.agents/<issue>/issue.md` (or the Task issue with `gh issue view <nr>`) only if the input is incomplete.
 2. Load the `implementation` skill (it dispatches to `<lang>-implementation` and `<lang>-test`). Every change ships with tests.
 3. Stay inside the task: no refactors, no unrelated fixes, no new dependencies without saying so in the report.
 4. Run build and the full test suite before every commit. Never commit a red suite.
