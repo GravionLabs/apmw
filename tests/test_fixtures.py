@@ -7,8 +7,7 @@ from apmw import TARGET_STRIP_FIELDS, main, sanitize_installed
 
 FIXTURES = Path(__file__).parent / "fixtures"
 AGENTS = [
-    "explorer", "implementer", "issue-reader", "orchestrator", "pbi-runner",
-    "planner", "pr-writer", "review-lead", "reviewer",
+    "explorer", "implementer", "issue-reader", "orchestrator", "reviewer",
 ]
 PLATFORMS = ["claude", "copilot", "opencode"]
 # installed file name per platform; apm keeps the Copilot suffix only for .github/.copilot
