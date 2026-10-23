@@ -24,10 +24,12 @@ invoking `apm` at all.
 - `tests/test_sanitize.py` — unit tests for the frontmatter-stripping logic (`sanitize_installed`,
   `strip_fields`, `add_permission_block`).
 - `tests/test_cli.py` — CLI-level tests: argument parsing, `main()` dispatch, global paths.
-- `tests/fixtures/agents/*.agent.md` — the agents apm-hub ships (`packages/agents`), copied
-  verbatim; `tests/fixtures/expected/<platform>/` holds the sanitized golden output and
-  `tests/test_fixtures.py` compares against it. When apm-hub changes an agent, copy it here and
-  regenerate the goldens with `sanitize_installed` (see the test module).
+- `tests/fixtures/agents/*.agent.md` — a pinned set of five apm-hub agents for golden/format
+  tests; `tests/fixtures/expected/<platform>/` holds the sanitized golden output and
+  `tests/test_fixtures.py` compares against it. When the sanitize format changes, regenerate the
+  goldens with `sanitize_installed` (see the test module).
+- `tests/test_apm_hub_contract.py` — checks the agents of a published apm-hub release (network,
+  marked `network`, run nightly by `.github/workflows/contract.yml`; excluded from `uv run pytest`).
 
 ## Key concepts
 
