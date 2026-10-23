@@ -57,8 +57,8 @@ def test_sanitize_parser_global_flag():
 def test_sanitize_command_runs_without_apm(tmp_path: Path, monkeypatch):
     agents_dir = tmp_path / ".claude" / "agents"
     agents_dir.mkdir(parents=True)
-    (agents_dir / "lead.md").write_text(
-        "---\nname: lead\nmodel: deepseek-v4-flash-free\n---\n\nBody.\n"
+    (agents_dir / "orchestrator.md").write_text(
+        "---\nname: orchestrator\nmodel: deepseek-v4-flash-free\n---\n\nBody.\n"
     )
 
     monkeypatch.chdir(tmp_path)
@@ -66,9 +66,9 @@ def test_sanitize_command_runs_without_apm(tmp_path: Path, monkeypatch):
 
     main()
 
-    fm = (agents_dir / "lead.md").read_text()
+    fm = (agents_dir / "orchestrator.md").read_text()
     assert "model:" not in fm
-    assert "name: lead" in fm
+    assert "name: orchestrator" in fm
 
 
 def test_sanitize_command_no_platform_hits_all_targets(tmp_path: Path, monkeypatch):
@@ -76,15 +76,15 @@ def test_sanitize_command_no_platform_hits_all_targets(tmp_path: Path, monkeypat
     opencode_dir = tmp_path / ".opencode" / "agents"
     claude_dir.mkdir(parents=True)
     opencode_dir.mkdir(parents=True)
-    claude_dir_content = "---\nname: lead\nmodel: deepseek-v4-flash-free\n---\n\nBody.\n"
-    opencode_content = "---\nname: lead\ntools: ['agent', 'read']\n---\n\nBody.\n"
-    (claude_dir / "lead.md").write_text(claude_dir_content)
-    (opencode_dir / "lead.md").write_text(opencode_content)
+    claude_dir_content = "---\nname: orchestrator\nmodel: deepseek-v4-flash-free\n---\n\nBody.\n"
+    opencode_content = "---\nname: orchestrator\ntools: ['agent', 'read']\n---\n\nBody.\n"
+    (claude_dir / "orchestrator.md").write_text(claude_dir_content)
+    (opencode_dir / "orchestrator.md").write_text(opencode_content)
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr("sys.argv", ["apmw", "sanitize"])
 
     main()
 
-    assert "model:" not in (claude_dir / "lead.md").read_text()
-    assert "tools:" not in (opencode_dir / "lead.md").read_text()
+    assert "model:" not in (claude_dir / "orchestrator.md").read_text()
+    assert "tools:" not in (opencode_dir / "orchestrator.md").read_text()
