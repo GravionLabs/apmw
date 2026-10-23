@@ -23,6 +23,7 @@ platform-specific additions via a reserved `metadata:` key.
 | `permission`     |    ❌    |    ✅     |      ❌      |       ❌        |
 | `task`           |    ❌    |    ✅     |      ✅      |       ✅        |
 | `user-invocable` |    ✅    |    ❌     |      ❌      |       ✅        |
+| `disable-model-invocation` |    ✅    |    ❌     |      ❌      |       ❌        |
 | `model`          |    ✅    |    ✅     |      ❌ *    |       ✅        |
 | `agents`         |    ✅    |    ❌     |      ❌      |       ✅        |
 | `skills`         |    ✅    |    ✅     |      ✅      |       ✅        |

@@ -237,3 +237,20 @@ def test_body_preserved_with_metadata(agents_dir_meta: Path):
     sanitize_installed(agents_dir_meta, TARGET_STRIP_FIELDS["opencode"], platform="opencode")
     assert "Body stays untouched." in (agents_dir_meta / "dev-workflow.md").read_text()
 
+
+
+@pytest.mark.parametrize("target", ["claude", "opencode", "cursor", "codex"])
+def test_disable_model_invocation_is_stripped_except_for_copilot(tmp_path: Path, target: str):
+    d = tmp_path / "agents"
+    d.mkdir()
+    (d / "lead.md").write_text(AGENT.replace("user-invocable: true", "user-invocable: true\ndisable-model-invocation: true"))
+    sanitize_installed(d, TARGET_STRIP_FIELDS[target])
+    assert "disable-model-invocation" not in frontmatter(d / "lead.md")
+
+
+def test_copilot_keeps_disable_model_invocation(tmp_path: Path):
+    d = tmp_path / "agents"
+    d.mkdir()
+    (d / "lead.md").write_text(AGENT.replace("user-invocable: true", "user-invocable: true\ndisable-model-invocation: true"))
+    sanitize_installed(d, TARGET_STRIP_FIELDS["copilot"])
+    assert "disable-model-invocation: true" in frontmatter(d / "lead.md")

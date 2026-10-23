@@ -32,11 +32,11 @@ def _load_target_strip_fields() -> dict[str, list[str]]:
     if _STRIP_FIELDS_PATH.is_file():
         return json.loads(_STRIP_FIELDS_PATH.read_text())
     return {
-        "opencode": ["tools", "user-invocable", "agents"],
+        "opencode": ["tools", "user-invocable", "agents", "disable-model-invocation"],
         "copilot": ["mode", "steps", "color", "permission", "task"],
-        "claude": ["mode", "steps", "color", "tools", "permission", "user-invocable", "agents", "model"],
-        "cursor": ["mode", "steps", "color", "permission"],
-        "codex": ["mode", "steps", "color", "permission"],
+        "claude": ["mode", "steps", "color", "tools", "permission", "user-invocable", "agents", "model", "disable-model-invocation"],
+        "cursor": ["mode", "steps", "color", "permission", "disable-model-invocation"],
+        "codex": ["mode", "steps", "color", "permission", "disable-model-invocation"],
     }
 
 
