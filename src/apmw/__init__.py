@@ -73,6 +73,8 @@ GLOBAL_PATHS: dict[str, dict[str, list[str]]] = {
     },
 }
 
+OPENCODE_PLUGIN_GLOB = "apm_modules/**/opencode/plugins/*.[tj]s"
+
 TOOLS_ARRAY_RE = re.compile(r'^tools:\s*\[')
 TOOLS_BLOCK_RE = re.compile(r'^tools:\s*$')
 PERMISSION_RE = re.compile(r'^permission:')
@@ -471,6 +473,31 @@ def sanitize_source(packages_dir: Path) -> int:
     return changed
 
 
+def place_opencode_plugin(global_: bool, dry_run: bool = False) -> int:
+    if global_:
+        root = resolve_path("~/.apm")
+        dirs = get_global_agents_dirs("opencode")
+        if not dirs:
+            return 0
+        dest_dir = dirs[0].parent / "plugins"
+    else:
+        root = Path.cwd()
+        dest_dir = Path.cwd() / TARGET_DIRS["opencode"] / "plugins"
+
+    placed = 0
+    for src in sorted(p for p in root.glob(OPENCODE_PLUGIN_GLOB) if p.is_file()):
+        dest = dest_dir / src.name
+        data = src.read_bytes()
+        if dest.is_file() and dest.read_bytes() == data:
+            continue
+        if not dry_run:
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(data)
+        placed += 1
+        print(f"  [plugin]  {src.name} — {'would place' if dry_run else 'placed'} in {dest_dir}")
+    return placed
+
+
 def run_apm(subcommand: str, args: list[str]) -> int:
     apm_exe = shutil.which("apm")
     if apm_exe is None:
@@ -507,12 +534,16 @@ def do_sanitize(platform_name: str | None, global_: bool, source: bool, dry_run:
         target_dir = Path.cwd() / target_subdir
         changed_installed = sanitize_installed(target_dir / "agents", fields, platform_name, dry_run)
 
+    placed_plugins = place_opencode_plugin(global_, dry_run) if platform_name == "opencode" else 0
+
     changed_source = 0
     if source and not dry_run:
         changed_source = sanitize_source(packages_dir)
 
     verb = "would be sanitized" if dry_run else "sanitized"
     parts = [f"{changed_installed} {'global ' if global_ else ''}installed files {verb}"]
+    if platform_name == "opencode":
+        parts.append(f"{placed_plugins} plugin files {'would be placed' if dry_run else 'placed'}")
     if source:
         parts.append(f"{changed_source} source files updated")
     print(f"\nDone: {', '.join(parts)}")

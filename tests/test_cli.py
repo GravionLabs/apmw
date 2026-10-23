@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import pytest
@@ -88,3 +89,76 @@ def test_sanitize_command_no_platform_hits_all_targets(tmp_path: Path, monkeypat
 
     assert "model:" not in (claude_dir / "orchestrator.md").read_text()
     assert "tools:" not in (opencode_dir / "orchestrator.md").read_text()
+
+
+PLUGIN_FIXTURE = Path(__file__).parent / "fixtures" / "plugins"
+PLUGIN_REL = Path("apm_modules/GravionLabs/apm-hub/packages/hooks/.apm/opencode/plugins/hooks.ts")
+
+
+def _run_sanitize(monkeypatch, *args: str) -> None:
+    monkeypatch.setattr("sys.argv", ["apmw", "sanitize", *args])
+    main()
+
+
+def _project(tmp_path: Path, monkeypatch) -> Path:
+    shutil.copytree(PLUGIN_FIXTURE, tmp_path, dirs_exist_ok=True)
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
+
+
+def test_sanitize_opencode_places_plugin_in_project(tmp_path: Path, monkeypatch, capsys):
+    _project(tmp_path, monkeypatch)
+    _run_sanitize(monkeypatch, "-p", "opencode")
+    placed = tmp_path / ".opencode" / "plugins" / "hooks.ts"
+    assert placed.read_bytes() == (PLUGIN_FIXTURE / PLUGIN_REL).read_bytes()
+    assert "1 plugin files placed" in capsys.readouterr().out
+
+
+def test_sanitize_opencode_plugin_is_idempotent_and_updates(tmp_path: Path, monkeypatch, capsys):
+    _project(tmp_path, monkeypatch)
+    _run_sanitize(monkeypatch, "-p", "opencode")
+    capsys.readouterr()
+    _run_sanitize(monkeypatch, "-p", "opencode")
+    assert "0 plugin files placed" in capsys.readouterr().out
+    (tmp_path / PLUGIN_REL).write_text("// v2\n")
+    _run_sanitize(monkeypatch, "-p", "opencode")
+    assert "1 plugin files placed" in capsys.readouterr().out
+    assert (tmp_path / ".opencode" / "plugins" / "hooks.ts").read_text() == "// v2\n"
+
+
+def test_sanitize_opencode_plugin_missing_source_is_noop(tmp_path: Path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    _run_sanitize(monkeypatch, "-p", "opencode")
+    assert not (tmp_path / ".opencode").exists()
+    assert "0 plugin files placed" in capsys.readouterr().out
+
+
+def test_sanitize_opencode_plugin_dry_run_writes_nothing(tmp_path: Path, monkeypatch, capsys):
+    _project(tmp_path, monkeypatch)
+    _run_sanitize(monkeypatch, "-p", "opencode", "--dry-run")
+    assert not (tmp_path / ".opencode").exists()
+    assert "1 plugin files would be placed" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("platform", ["claude", "copilot", "cursor", "codex"])
+def test_sanitize_other_platforms_place_no_plugin(tmp_path: Path, monkeypatch, platform: str):
+    _project(tmp_path, monkeypatch)
+    _run_sanitize(monkeypatch, "-p", platform)
+    assert not (tmp_path / ".opencode").exists()
+    assert not list(tmp_path.glob(".*/plugins"))
+
+
+def test_sanitize_opencode_places_plugin_globally(tmp_path: Path, monkeypatch, capsys):
+    home = tmp_path / "home"
+    shutil.copytree(PLUGIN_FIXTURE, home / ".apm")
+    work = tmp_path / "work"
+    work.mkdir()
+    shutil.copytree(PLUGIN_FIXTURE, work, dirs_exist_ok=True)
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setattr("apmw._platform.system", lambda: "Linux")
+    monkeypatch.chdir(work)
+    _run_sanitize(monkeypatch, "-p", "opencode", "-g")
+    placed = home / ".config" / "opencode" / "plugins" / "hooks.ts"
+    assert placed.read_bytes() == (PLUGIN_FIXTURE / PLUGIN_REL).read_bytes()
+    assert not (work / ".opencode").exists()
+    assert "1 plugin files placed" in capsys.readouterr().out
