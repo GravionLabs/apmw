@@ -1,0 +1,30 @@
+name: Contract
+
+# Runs the apm-hub contract test (tests/test_apm_hub_contract.py) against the latest published
+# apm-hub release, nightly and on demand. apm_hub_ref pins a tag or branch; empty means latest release.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      apm_hub_ref:
+        description: 'apm-hub tag or branch to test against (empty = latest release)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: apm-hub contract test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Run the contract test
+        run: uv run pytest -m network
+        env:
+          APM_HUB_REF: ${{ inputs.apm_hub_ref }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
