@@ -36,7 +36,7 @@ Whether a platform actually supports a kept field is up to the platform. To give
 field the table strips (for example `tools` or `model` for Claude Code, `permission` for
 OpenCode), put it under `metadata.<platform>`.
 
-The nine agents shipped by apm-hub (`explorer`, `implementer`, `issue-reader`, `orchestrator`,
+The agents shipped by apm-hub (`explorer`, `implementer`, `issue-reader`, `orchestrator`,
 `pbi-runner`, `planner`, `pr-writer`, `review-lead`, `reviewer`) are the
 reference fixtures: [`tests/fixtures/agents/*.agent.md`](https://github.com/GravionLabs/apmw/tree/main/tests/fixtures/agents) with the expected output per platform under
 `tests/fixtures/expected/<platform>/`. `apmw sanitize --dry-run -p <platform>` prints the diff

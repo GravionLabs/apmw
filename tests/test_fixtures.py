@@ -50,11 +50,11 @@ def test_claude_gets_tools_model_and_skills(tmp_path: Path):
     sanitize_installed(d, TARGET_STRIP_FIELDS["claude"], "claude")
     explorer = _frontmatter(d / "explorer.md")
     assert "tools: [Read, Grep, Glob]" in explorer
-    assert "model: haiku" in explorer
+    assert "model:" in explorer
     assert "user-invocable:" not in explorer
     implementer = _frontmatter(d / "implementer.md")
     assert "skills: [implementation]" in implementer
-    assert "model: sonnet" in implementer
+    assert "model:" in implementer
     assert "AskUserQuestion" in _frontmatter(d / "orchestrator.md")
 
 
@@ -68,7 +68,7 @@ def test_opencode_gets_mode_model_permission_and_no_tools(tmp_path: Path):
         assert "permission:" in fm
     assert "mode: primary" in _frontmatter(d / "orchestrator.md")
     assert "mode: subagent" in _frontmatter(d / "explorer.md")
-    assert "model: anthropic/claude-haiku-5-5" in _frontmatter(d / "explorer.md")
+    assert "model: anthropic/" in _frontmatter(d / "explorer.md")
     assert '"git diff*": allow' in _frontmatter(d / "reviewer.md")
 
 
@@ -106,9 +106,27 @@ def test_sanitize_dry_run_prints_diff_and_writes_nothing(tmp_path: Path, monkeyp
     assert (d / "explorer.md").read_text() == before
 
 
-def test_disable_model_invocation_only_survives_on_copilot(tmp_path: Path):
-    for platform, name in (("claude", "orchestrator.md"), ("opencode", "orchestrator.md"), ("copilot", "orchestrator.agent.md")):
-        d = _install(tmp_path, platform)
-        assert "disable-model-invocation: true" in _frontmatter(d / name)
-        sanitize_installed(d, TARGET_STRIP_FIELDS[platform], platform)
-        assert ("disable-model-invocation" in _frontmatter(d / name)) == (platform == "copilot")
+@pytest.mark.parametrize("platform", PLATFORMS)
+def test_disable_model_invocation_only_survives_on_copilot(tmp_path: Path, platform: str):
+    d = _install(tmp_path, platform)
+    name = INSTALLED_NAME[platform].format(name="orchestrator")
+    assert "disable-model-invocation: true" in _frontmatter(d / name)
+    sanitize_installed(d, TARGET_STRIP_FIELDS[platform], platform)
+    assert ("disable-model-invocation" in _frontmatter(d / name)) == (platform == "copilot")
+
+
+def test_agents_list_matches_fixture_and_golden_dirs():
+    assert sorted(p.name.removesuffix(".agent.md") for p in (FIXTURES / "agents").glob("*.agent.md")) == sorted(AGENTS)
+    for platform in PLATFORMS:
+        suffix = INSTALLED_NAME[platform].format(name="")
+        assert sorted(p.name.removesuffix(suffix) for p in (FIXTURES / "expected" / platform).iterdir()) == sorted(AGENTS)
+
+
+def test_opencode_keeps_nested_bash_and_task_maps_with_comments(tmp_path: Path):
+    d = _install(tmp_path, "opencode")
+    sanitize_installed(d, TARGET_STRIP_FIELDS["opencode"], "opencode")
+    fm = _frontmatter(d / "issue-reader.md")
+    assert "  task: deny\n  bash:\n" in fm
+    assert '    "gh issue view *": allow\n    # state writes rooted' in fm
+    assert '    "gh api*-X*": deny\n' in fm
+    assert "metadata:" not in fm

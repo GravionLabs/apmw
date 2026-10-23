@@ -24,7 +24,7 @@ invoking `apm` at all.
 - `tests/test_sanitize.py` — unit tests for the frontmatter-stripping logic (`sanitize_installed`,
   `strip_fields`, `add_permission_block`).
 - `tests/test_cli.py` — CLI-level tests: argument parsing, `main()` dispatch, global paths.
-- `tests/fixtures/agents/*.agent.md` — the nine agents apm-hub ships (`packages/agents`), copied
+- `tests/fixtures/agents/*.agent.md` — the agents apm-hub ships (`packages/agents`), copied
   verbatim; `tests/fixtures/expected/<platform>/` holds the sanitized golden output and
   `tests/test_fixtures.py` compares against it. When apm-hub changes an agent, copy it here and
   regenerate the goldens with `sanitize_installed` (see the test module).
