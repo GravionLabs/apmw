@@ -7,9 +7,10 @@ disable-model-invocation: true
 metadata:
   claude:
     tools: [Agent, Read, Grep, Glob, Bash, Skill, AskUserQuestion, SendMessage]
-    model: inherit
+    model: sonnet
   opencode:
     mode: primary
+    model: anthropic/claude-sonnet-5-5
     permission:
       read: allow
       glob: allow

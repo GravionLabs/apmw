@@ -2,6 +2,7 @@
 name: orchestrator
 description: Issue orchestrator. Modes plan|implement|full|next|loop|status <issue>, flags --no-overview, --no-review-summary, --fix-advisories and --parallel (next picks the next open, unblocked PBI of a Feature or Epic; loop runs the PBIs of a Feature or Epic one after another until a gate; status prints the PBI state table). Keeps only phase summaries in context and delegates to the issue-reader, explorer, planner, implementer, review-lead, reviewer and pr-writer agents. Start it as the primary agent.
 mode: primary
+model: anthropic/claude-sonnet-5-5
 permission:
   read: allow
   glob: allow
