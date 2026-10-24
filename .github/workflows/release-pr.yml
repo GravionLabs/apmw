@@ -22,3 +22,22 @@ jobs:
       - uses: GravionLabs/ci/versioning/mark-merged-issues@main
         with:
           token: ${{ secrets.GH_PAT || github.token }}
+      # Moves the project status of issues labelled `merged` to "In release" (user-owned project: needs GH_PAT with scope `project`).
+      - name: Set project status to "In release"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          PROJECT: '17'
+          OWNER: GravionLabs
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "GH_PAT not set, skipping"; exit 0; }
+          project_id=$(gh project view "$PROJECT" --owner "$OWNER" --format json --jq .id)
+          field=$(gh project field-list "$PROJECT" --owner "$OWNER" --format json --jq '.fields[] | select(.name=="Status")')
+          field_id=$(jq -r .id <<<"$field")
+          option_id=$(jq -r '.options[] | select(.name=="In release") | .id' <<<"$field")
+          items=$(gh project item-list "$PROJECT" --owner "$OWNER" --limit 1000 --format json)
+          for nr in $(gh issue list --repo "$GITHUB_REPOSITORY" --label merged --state open --limit 200 --json number --jq '.[].number'); do
+            item_id=$(jq -r --argjson nr "$nr" --arg repo "$GITHUB_REPOSITORY" '.items[] | select(.content.number==$nr and .content.repository==$repo) | .id' <<<"$items")
+            [ -n "$item_id" ] || { echo "#$nr not in project, skipped"; continue; }
+            gh project item-edit --id "$item_id" --project-id "$project_id" --field-id "$field_id" --single-select-option-id "$option_id"
+            echo "#$nr -> In release"
+          done
