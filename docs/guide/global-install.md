@@ -29,3 +29,7 @@ the others are fallbacks for hand-made installs.
 | GitHub Copilot | `~/.copilot/agents` · `~/.config/github-copilot/agents` | `~/.copilot/agents` · `~/Library/Application Support/github-copilot/agents` | `%USERPROFILE%\.copilot\agents` · `%APPDATA%\GitHub Copilot\agents` |
 | Cursor | `~/.cursor/agents` · `~/.config/cursor/agents` | `~/Library/Application Support/cursor/agents` | `%APPDATA%\Cursor\agents` |
 | Codex | `~/.codex/agents` | `~/.codex/agents` | `%APPDATA%\Codex\agents` |
+
+**OpenCode hooks plugin.** With `-p opencode -g`, `apmw` globs `~/.apm/apm_modules/**/opencode/plugins/*.ts|js`
+and copies each match to the `plugins` directory next to the first OpenCode agents path
+(`~/.config/opencode/plugins` on Linux and macOS). Identical files are skipped and a missing plugin is a no-op.

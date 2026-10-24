@@ -2,7 +2,7 @@
 name: explorer
 description: Read-only codebase exploration. Returns a short summary with file:line references, never file dumps. Use for "where is", "how does X work", "which files".
 mode: subagent
-model: anthropic/claude-haiku-4-5
+model: anthropic/claude-haiku-5-5
 permission:
   read: allow
   glob: allow

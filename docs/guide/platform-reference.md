@@ -28,6 +28,11 @@ For each `*.md` file in the target agent directory, `apmw` runs:
    Missing `tools` (Claude Code) or `permission` (OpenCode) are derived from the Copilot `tools:` list, see [Authoring multi-target agents](authoring-agents.md#derived-fields-when-metadata-is-missing).
 4. **Rewrite** — write the file only if the frontmatter changed.
 
+For OpenCode only, `apmw` also places the hooks plugin: it globs `apm_modules/**/opencode/plugins/*.ts|js`
+in the working directory and copies each match to `.opencode/plugins/`. The copy is skipped when the content
+is identical, a missing plugin is silently ignored, `--dry-run` writes nothing, and the count appears in the
+`Done:` line. Other platforms are untouched. Plugin code from `apm_modules` is copied as-is, so only install packages you trust.
+
 ## OpenCode `permission:` reference
 
 ```yaml

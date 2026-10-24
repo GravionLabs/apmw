@@ -12,7 +12,7 @@ from apmw import (
 
 
 AGENT = """---
-name: dev-workflow
+name: orchestrator
 description: "Orchestrator agent."
 model: deepseek-v4-flash-free
 mode: all
@@ -34,7 +34,7 @@ Body stays untouched.
 """
 
 AGENT_WITH_METADATA = """---
-name: dev-workflow
+name: orchestrator
 description: "Orchestrator agent."
 mode: all
 steps: 40
@@ -63,7 +63,7 @@ Body stays untouched.
 def agents_dir(tmp_path: Path) -> Path:
     d = tmp_path / "agents"
     d.mkdir()
-    (d / "dev-workflow.md").write_text(AGENT)
+    (d / "orchestrator.md").write_text(AGENT)
     return d
 
 
@@ -71,7 +71,7 @@ def agents_dir(tmp_path: Path) -> Path:
 def agents_dir_meta(tmp_path: Path) -> Path:
     d = tmp_path / "agents"
     d.mkdir()
-    (d / "dev-workflow.md").write_text(AGENT_WITH_METADATA)
+    (d / "orchestrator.md").write_text(AGENT_WITH_METADATA)
     return d
 
 
@@ -83,18 +83,18 @@ def frontmatter(path: Path) -> str:
 def test_claude_strips_permission_block_and_model(agents_dir: Path):
     changed = sanitize_installed(agents_dir, TARGET_STRIP_FIELDS["claude"])
     assert changed == 1
-    fm = frontmatter(agents_dir / "dev-workflow.md")
+    fm = frontmatter(agents_dir / "orchestrator.md")
     for forbidden in ("permission:", "model:", "mode:", "steps:", "color:",
                       "tools:", "user-invocable:", "agents:", "bash:", "gh issue"):
         assert forbidden not in fm
-    assert "name: dev-workflow" in fm
+    assert "name: orchestrator" in fm
     assert "description:" in fm
 
 
 def test_opencode_strips_tools_but_keeps_permission(agents_dir: Path):
     changed = sanitize_installed(agents_dir, TARGET_STRIP_FIELDS["opencode"])
     assert changed == 1
-    fm = frontmatter(agents_dir / "dev-workflow.md")
+    fm = frontmatter(agents_dir / "orchestrator.md")
     assert "tools:" not in fm
     assert "user-invocable:" not in fm
     assert "agents:" not in fm
@@ -106,14 +106,14 @@ def test_opencode_strips_tools_but_keeps_permission(agents_dir: Path):
 def test_cursor_codex_strip_steps_and_color(agents_dir: Path, target: str):
     changed = sanitize_installed(agents_dir, TARGET_STRIP_FIELDS[target])
     assert changed == 1
-    fm = frontmatter(agents_dir / "dev-workflow.md")
+    fm = frontmatter(agents_dir / "orchestrator.md")
     for forbidden in ("mode:", "steps:", "color:", "permission:"):
         assert forbidden not in fm
 
 
 def test_body_preserved(agents_dir: Path):
     sanitize_installed(agents_dir, TARGET_STRIP_FIELDS["claude"])
-    assert "Body stays untouched." in (agents_dir / "dev-workflow.md").read_text()
+    assert "Body stays untouched." in (agents_dir / "orchestrator.md").read_text()
 
 
 def test_file_without_frontmatter_untouched(tmp_path: Path):
@@ -195,7 +195,7 @@ def test_inject_empty_meta_is_noop():
 def test_opencode_pipeline_injects_metadata_and_strips_tools(agents_dir_meta: Path):
     changed = sanitize_installed(agents_dir_meta, TARGET_STRIP_FIELDS["opencode"], platform="opencode")
     assert changed == 1
-    fm = frontmatter(agents_dir_meta / "dev-workflow.md")
+    fm = frontmatter(agents_dir_meta / "orchestrator.md")
     # tools/user-invocable/agents/metadata stripped
     assert "tools:" not in fm
     assert "user-invocable:" not in fm
@@ -209,14 +209,14 @@ def test_opencode_pipeline_injects_metadata_and_strips_tools(agents_dir_meta: Pa
 
 def test_metadata_absent_from_all_output(agents_dir_meta: Path):
     sanitize_installed(agents_dir_meta, TARGET_STRIP_FIELDS["opencode"], platform="opencode")
-    text = (agents_dir_meta / "dev-workflow.md").read_text()
+    text = (agents_dir_meta / "orchestrator.md").read_text()
     assert "metadata:" not in text
 
 
 def test_claude_pipeline_injects_model_from_metadata(agents_dir_meta: Path):
     changed = sanitize_installed(agents_dir_meta, TARGET_STRIP_FIELDS["claude"], platform="claude")
     assert changed == 1
-    fm = frontmatter(agents_dir_meta / "dev-workflow.md")
+    fm = frontmatter(agents_dir_meta / "orchestrator.md")
     assert "model: claude-sonnet-4-5" in fm
     assert "metadata:" not in fm
     assert "tools: [Agent, Read, Grep, Glob]" in fm
@@ -226,7 +226,7 @@ def test_pipeline_no_metadata_platform_still_strips(agents_dir_meta: Path):
     # cursor has no metadata block in AGENT_WITH_METADATA — should still strip normally
     changed = sanitize_installed(agents_dir_meta, TARGET_STRIP_FIELDS["cursor"], platform="cursor")
     assert changed == 1
-    fm = frontmatter(agents_dir_meta / "dev-workflow.md")
+    fm = frontmatter(agents_dir_meta / "orchestrator.md")
     assert "mode:" not in fm
     assert "steps:" not in fm
     assert "color:" not in fm
@@ -235,5 +235,22 @@ def test_pipeline_no_metadata_platform_still_strips(agents_dir_meta: Path):
 
 def test_body_preserved_with_metadata(agents_dir_meta: Path):
     sanitize_installed(agents_dir_meta, TARGET_STRIP_FIELDS["opencode"], platform="opencode")
-    assert "Body stays untouched." in (agents_dir_meta / "dev-workflow.md").read_text()
+    assert "Body stays untouched." in (agents_dir_meta / "orchestrator.md").read_text()
 
+
+
+@pytest.mark.parametrize("target", ["claude", "opencode", "cursor", "codex"])
+def test_disable_model_invocation_is_stripped_except_for_copilot(tmp_path: Path, target: str):
+    d = tmp_path / "agents"
+    d.mkdir()
+    (d / "orchestrator.md").write_text(AGENT.replace("user-invocable: true", "user-invocable: true\ndisable-model-invocation: true"))
+    sanitize_installed(d, TARGET_STRIP_FIELDS[target])
+    assert "disable-model-invocation" not in frontmatter(d / "orchestrator.md")
+
+
+def test_copilot_keeps_disable_model_invocation(tmp_path: Path):
+    d = tmp_path / "agents"
+    d.mkdir()
+    (d / "orchestrator.md").write_text(AGENT.replace("user-invocable: true", "user-invocable: true\ndisable-model-invocation: true"))
+    sanitize_installed(d, TARGET_STRIP_FIELDS["copilot"])
+    assert "disable-model-invocation: true" in frontmatter(d / "orchestrator.md")

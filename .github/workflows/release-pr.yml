@@ -1,19 +1,50 @@
-      # Moves the project status of issues labelled `merged` to "In release" (user-owned project: needs GH_PAT with scope `project`).
+name: Release PR
+
+on:
+  push:
+    branches: ['release/**']
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-pr:
+    name: Release PR
+    runs-on: ubuntu-latest
+    steps:
+      # A PAT is needed: PRs created with GITHUB_TOKEN do not trigger the required pull_request checks.
+      - uses: GravionLabs/ci/versioning/release-pr@main
+        with:
+          token: ${{ secrets.GH_PAT || github.token }}
+      # Labels issues merged into the release branch with `merged` (removed when the release closes them).
+      - uses: GravionLabs/ci/versioning/mark-merged-issues@main
+        with:
+          token: ${{ secrets.GH_PAT || github.token }}
+      # Moves the project status of issues labelled `merged` to "In release". The project is user-owned: needs a
+      # classic PAT with scope `project` (secret PROJECT_TOKEN, else GH_PAT); fine-grained tokens cannot access it.
+      # Without access only the label is set. Never fails the job.
       - name: Set project status to "In release"
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.GH_PAT }}
           PROJECT: '17'
           OWNER: GravionLabs
         run: |
-          [ -n "$GH_TOKEN" ] || { echo "GH_PAT not set, skipping"; exit 0; }
-          project_id=$(gh project view "$PROJECT" --owner "$OWNER" --format json --jq .id)
+          [ -n "$GH_TOKEN" ] || { echo "::warning::no token with scope project (secret PROJECT_TOKEN or GH_PAT); label only"; exit 0; }
+          project_id=$(gh project view "$PROJECT" --owner "$OWNER" --format json --jq .id) || {
+            echo "::warning::token cannot access project $PROJECT (classic PAT with scope project needed; fine-grained tokens cannot access user-owned projects); project status not set"
+            exit 0
+          }
           field=$(gh project field-list "$PROJECT" --owner "$OWNER" --format json --jq '.fields[] | select(.name=="Status")')
           field_id=$(jq -r .id <<<"$field")
           option_id=$(jq -r '.options[] | select(.name=="In release") | .id' <<<"$field")
+          [ -n "$option_id" ] || { echo "::warning::project $PROJECT has no Status option 'In release'; skipped"; exit 0; }
           items=$(gh project item-list "$PROJECT" --owner "$OWNER" --limit 1000 --format json)
           for nr in $(gh issue list --repo "$GITHUB_REPOSITORY" --label merged --state open --limit 200 --json number --jq '.[].number'); do
             item_id=$(jq -r --argjson nr "$nr" --arg repo "$GITHUB_REPOSITORY" '.items[] | select(.content.number==$nr and .content.repository==$repo) | .id' <<<"$items")
             [ -n "$item_id" ] || { echo "#$nr not in project, skipped"; continue; }
-            gh project item-edit --id "$item_id" --project-id "$project_id" --field-id "$field_id" --single-select-option-id "$option_id"
+            gh project item-edit --id "$item_id" --project-id "$project_id" --field-id "$field_id" --single-select-option-id "$option_id" \
+              || { echo "::warning::#$nr: status not set"; continue; }
             echo "#$nr -> In release"
           done
