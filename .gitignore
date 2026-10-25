@@ -13,3 +13,7 @@ coverage.xml
 node_modules/
 .vitepress/cache/
 .vitepress/dist/
+
+
+# APM dependencies
+apm_modules/
