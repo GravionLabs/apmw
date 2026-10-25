@@ -1,0 +1,15 @@
+name: apmw
+version: 1.0.0
+description: APM project for apmw
+author: Jérôme Kaufmann
+# Which agent platforms to deploy to.
+# Resolution order: --target flag > this field > auto-detect from filesystem.
+# Accepted values: agent-skills, antigravity, claude, codex, copilot, cursor, gemini, grok-build, hermes, kiro, opencode, vscode, windsurf
+targets:
+  - claude
+dependencies:
+  apm:
+    - GravionLabs/apm-hub/packages/py#v2.4.0
+  mcp: []
+includes: auto
+scripts: {}

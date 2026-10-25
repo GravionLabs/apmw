@@ -1,0 +1,202 @@
+lockfile_version: '1'
+apm_version: 0.35.0
+dependencies:
+- repo_url: gravionlabs/apm-hub
+  materialization_repo_url: GravionLabs/apm-hub
+  name: py
+  host: github.com
+  resolved_commit: 62d7efa8d0004b71bbb5d0914b2af6f87adb4256
+  resolved_ref: v2.4.0
+  version: 2.4.0
+  virtual_path: packages/py
+  is_virtual: true
+  package_type: apm_package
+  deployed_files:
+  - .claude/skills/py-create-project
+  - .claude/skills/py-create-project/SKILL.md
+  - .claude/skills/py-create-project/scripts/New-PythonProject.ps1
+  - .claude/skills/py-create-project/templates/.github/workflows/ci.yml
+  - .claude/skills/py-create-project/templates/.gitignore
+  - .claude/skills/py-create-project/templates/.python-version
+  - .claude/skills/py-create-project/templates/pyproject.toml
+  - .claude/skills/py-create-project/templates/src/__init__.py
+  - .claude/skills/py-create-project/templates/tests/conftest.py
+  - .claude/skills/py-implementation
+  - .claude/skills/py-implementation/SKILL.md
+  - .claude/skills/py-implementation/references/uv-cli.md
+  - .claude/skills/py-test
+  - .claude/skills/py-test/SKILL.md
+  - .claude/skills/py-test/references/coverage.md
+  - .claude/skills/py-test/references/marks-and-naming.md
+  - .claude/skills/py-test/references/mocking-python.md
+  deployed_file_hashes:
+    .claude/skills/py-create-project/SKILL.md: sha256:49a52d58d549a2c53e28da796deed2b3ee26af847ff1dc2752b39153a40ecef7
+    .claude/skills/py-create-project/scripts/New-PythonProject.ps1: sha256:a0c3bd4953c4b87a5d86ddf2385b26b7fe4c6646bf70ce2ee83640ad940fe9f6
+    .claude/skills/py-create-project/templates/.github/workflows/ci.yml: sha256:7f88454f6e961abcadc414bca7335a8eb6a1b2731a4a1d7e6ae1ae96a91ed623
+    .claude/skills/py-create-project/templates/.gitignore: sha256:24a000e7cb62bfa49abe2761e56b9f8c08f4187bfa52a932112a460fe5a2148d
+    .claude/skills/py-create-project/templates/.python-version: sha256:a876e0b10411037a012498b9fe18d9bc1df32ed8b722a13564dc944ddcfd9135
+    .claude/skills/py-create-project/templates/pyproject.toml: sha256:76fbe317092a121433a36d6c9668f392be5277d0f3245e33e5b65a5938503f34
+    .claude/skills/py-create-project/templates/src/__init__.py: sha256:eca40e18fcefce3776fe55af4dbb19ebd04f98462901b864f5df25af2849355e
+    .claude/skills/py-create-project/templates/tests/conftest.py: sha256:89172fd40d965f51853a86b7830cbe745f86e7f1db37c2d6fce849850e109376
+    .claude/skills/py-implementation/SKILL.md: sha256:0d9af7d538823055a37314e39f229fdf7853fe4817c13a706c685cd743fa6b55
+    .claude/skills/py-implementation/references/uv-cli.md: sha256:6ea2209663824cb6397bc12b4f22bccf31a867abb4f5d481dd80a01c39ca61f7
+    .claude/skills/py-test/SKILL.md: sha256:27d459e393c8b837eab1a64265ddd04ae1caaeaa21245185505f325611c99d95
+    .claude/skills/py-test/references/coverage.md: sha256:84c0db78ea9b5b1187b71882fe812ea4150cfc3ff30a7e7701d898eb8405fd92
+    .claude/skills/py-test/references/marks-and-naming.md: sha256:23a449aabf6e6ce655aecfd38165d63c725fb74f9ed204810a15096afd6d81db
+    .claude/skills/py-test/references/mocking-python.md: sha256:9885ef98445841c463bc6e2d1087916b845fdc2b7f9cec05d1991ef7a7b963db
+  content_hash: sha256:b8cea8403519f3ec3a04ac4864ee362080cd18d018474e2bba2c56d45c8b1f9b
+  declared_license: MIT
+deployments:
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-create-project
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: null
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-create-project/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:49a52d58d549a2c53e28da796deed2b3ee26af847ff1dc2752b39153a40ecef7
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-create-project/scripts/New-PythonProject.ps1
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:a0c3bd4953c4b87a5d86ddf2385b26b7fe4c6646bf70ce2ee83640ad940fe9f6
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-create-project/templates/.github/workflows/ci.yml
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:7f88454f6e961abcadc414bca7335a8eb6a1b2731a4a1d7e6ae1ae96a91ed623
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-create-project/templates/.gitignore
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:24a000e7cb62bfa49abe2761e56b9f8c08f4187bfa52a932112a460fe5a2148d
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-create-project/templates/.python-version
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:a876e0b10411037a012498b9fe18d9bc1df32ed8b722a13564dc944ddcfd9135
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-create-project/templates/pyproject.toml
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:76fbe317092a121433a36d6c9668f392be5277d0f3245e33e5b65a5938503f34
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-create-project/templates/src/__init__.py
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:eca40e18fcefce3776fe55af4dbb19ebd04f98462901b864f5df25af2849355e
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-create-project/templates/tests/conftest.py
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:89172fd40d965f51853a86b7830cbe745f86e7f1db37c2d6fce849850e109376
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-implementation
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: null
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-implementation/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:0d9af7d538823055a37314e39f229fdf7853fe4817c13a706c685cd743fa6b55
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-implementation/references/uv-cli.md
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:6ea2209663824cb6397bc12b4f22bccf31a867abb4f5d481dd80a01c39ca61f7
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-test
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: null
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-test/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:27d459e393c8b837eab1a64265ddd04ae1caaeaa21245185505f325611c99d95
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-test/references/coverage.md
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:84c0db78ea9b5b1187b71882fe812ea4150cfc3ff30a7e7701d898eb8405fd92
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-test/references/marks-and-naming.md
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:23a449aabf6e6ce655aecfd38165d63c725fb74f9ed204810a15096afd6d81db
+- kind: project-relative
+  target: claude
+  value: .claude/skills/py-test/references/mocking-python.md
+  runtime: null
+  scope: project
+  owners:
+  - gravionlabs/apm-hub/packages/py
+  active_owner: gravionlabs/apm-hub/packages/py
+  content_hash: sha256:9885ef98445841c463bc6e2d1087916b845fdc2b7f9cec05d1991ef7a7b963db
