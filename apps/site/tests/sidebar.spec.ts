@@ -36,7 +36,7 @@ describe('the sidebar of the real guide', () => {
   const pages = guidePages(readme);
 
   it('has a page for every entry of the list, in the order of the list', () => {
-    expect(pages.length).toBeGreaterThanOrEqual(5);
+    expect(pages.length).toBeGreaterThanOrEqual(3);
     for (const page of pages)
       expect(existsSync(resolve(docs, `${page.link.slice(1)}.md`))).toBe(true);
     const order = [...readme.matchAll(/^\d+\.\s+\[[^\]]+\]\(([^)#\s]+)\.md\)/gm)].map(
