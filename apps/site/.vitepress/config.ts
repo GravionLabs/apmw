@@ -12,7 +12,7 @@ const readme = readFileSync(resolve(repoRoot, 'docs/guide/README.md'), 'utf8');
 export default defineConfig({
   title: 'apmw',
   description:
-    'Cross-platform wrapper for the apm CLI: one agent source file, sanitized frontmatter for Claude Code, OpenCode, GitHub Copilot, Cursor and Codex.',
+    'Cross-platform wrapper for the apm CLI: runs apm install and update, then places the OpenCode plugins of the installed packages.',
   lang: 'en',
   // `/<repository>/` on GitHub Pages; the workflow sets SITE_BASE.
   base,

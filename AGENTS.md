@@ -43,5 +43,5 @@ The title of an issue starts with its level: `[Epic]`, `[Feature]`, `[PBI]`, `[T
 ## Style
 
 The codebase has no docstrings and minimal comments (only where a non-obvious rationale needs
-capturing, e.g. the `claude` strip-fields comment). Keep additions flat and terse — match what's
+capturing, e.g. the `GLOBAL_PATHS` comment). Keep additions flat and terse — match what's
 already there rather than adding documentation blocks.
