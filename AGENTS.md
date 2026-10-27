@@ -54,6 +54,10 @@ uv run pytest
 
 No linter or formatter is configured in `pyproject.toml` — don't introduce one speculatively.
 
+## Issues
+
+The title of an issue starts with its level: `[Epic]`, `[Feature]`, `[PBI]`, `[Task]` or `[Bug]`, then the summary (`[PBI] feat: short summary`).
+
 ## Style
 
 The codebase has no docstrings and minimal comments (only where a non-obvious rationale needs
