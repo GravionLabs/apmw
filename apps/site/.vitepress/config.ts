@@ -28,7 +28,6 @@ export default defineConfig({
     siteTitle: 'apmw',
     nav: [
       { text: 'Guide', link: '/guide/' },
-      { text: 'Reference', link: '/guide/platform-reference' },
       { text: 'PyPI', link: 'https://pypi.org/project/apmw/' },
       { text: 'GitHub', link: REPO_URL },
     ],
