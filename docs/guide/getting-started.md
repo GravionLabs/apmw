@@ -34,26 +34,30 @@ Uses `uv tool install` if `uv` is on `PATH`, falling back to `pipx`.
 ## Usage
 
 ```bash
-apmw install -p opencode    # apm install + place OpenCode plugins
-apmw update  -p opencode    # apm update + place OpenCode plugins
-apmw install -g -p opencode # global install, plugins go to ~/.config/opencode/plugins
-apmw install                # plugins for every platform that has them
+apmw install -p claude      # apm install + sanitize for Claude Code
+apmw install -p opencode    # apm install + sanitize for OpenCode
+apmw update  -p copilot     # apm update + sanitize for GitHub Copilot
+apmw sanitize -p claude     # sanitize an already-installed local agent dir (no apm call)
+apmw sanitize -g -p claude  # sanitize the global Claude Code agent dir
+apmw sanitize               # sanitize for every known platform
 ```
 
 **Flags:**
 
 | Flag | Description |
 | :--- | :---------- |
-| `-p, --platform` | Target: `opencode`, `copilot`, `claude`, `cursor`, `codex`; omit to run for all (only OpenCode has plugins) |
-| `-g, --global` | Forwarded to `apm`; plugins go to the global OpenCode directory |
+| `-p, --platform` | Target: `opencode`, `copilot`, `claude`, `cursor`, `codex`; omit to run for all |
+| `-g, --global` | Sanitize the platform's global agent install directory instead of the project dir |
+| `-s, --source` | Also inject `permission:` blocks into source agent files under `packages/` |
 | `-y, --yes` | (`update` only) Skip consent prompt |
-| `--dry-run` | (`update` only) Preview apm changes without writing; skips plugin placement |
+| `--dry-run` | `update`: preview apm changes without writing; `sanitize`: print a diff per agent file instead of writing |
 
-`apmw` requires `apm` to be installed and on `PATH`.
+`apmw install`/`update` require `apm` to be installed and on `PATH`.
+`apmw sanitize` operates only on local files and does not invoke `apm`.
 
 Arguments `apmw` does not know are passed on to `apm`, so packages and any other `apm` option work
 as usual (`-g` is forwarded too):
 
 ```bash
-apmw install all@apm-hub -g -p claude   # runs: apm install -g all@apm-hub, then places plugins
+apmw install all@apm-hub -g -p claude   # runs: apm install -g all@apm-hub, then sanitizes
 ```

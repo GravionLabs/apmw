@@ -9,7 +9,14 @@ uv run pytest
 
 ## Tests
 
-`uv run pytest` is offline. The plugin tests use the fixture project in `tests/fixtures/plugins`.
+`uv run pytest` is offline. The golden tests (`tests/test_fixtures.py`) sanitize a pinned set of
+five agents in `tests/fixtures/agents` and compare against `tests/fixtures/expected/<platform>/`.
+When the sanitize format changes, regenerate the goldens with `sanitize_installed`.
+
+`uv run pytest -m network` runs the contract test (`tests/test_apm_hub_contract.py`), which
+fetches the agents of the latest published apm-hub release and checks platform invariants. Set
+`APM_HUB_REF` to test another tag and `GITHUB_TOKEN` to avoid GitHub API rate limits. CI runs it
+nightly.
 
 No linter or formatter is configured — don't introduce one speculatively.
 

@@ -8,9 +8,10 @@
 
 Cross-platform wrapper for the [apm](https://github.com/microsoft/apm) CLI.
 
-`apm install` and `apm update` deploy platform-neutral skills cleanly, but do not place the
-OpenCode plugins that packages ship. `apmw` runs the real `apm` command and then copies those
-plugins into the OpenCode `plugins` directory.
+`apm install` and `apm update` deploy platform-neutral skills cleanly, but agent files carry
+platform-specific frontmatter (`permission`, `mode`, `tools`, …) that each target — Claude Code,
+OpenCode, GitHub Copilot, Cursor, Codex — interprets differently. `apmw` runs the real `apm`
+command and then sanitizes the installed agent frontmatter for the platform you specify.
 
 ## Install
 
@@ -31,12 +32,13 @@ attached to each [GitHub release](https://github.com/GravionLabs/apmw/releases).
 ## Usage
 
 ```bash
-apmw install -p opencode    # apm install + place OpenCode plugins
-apmw update  -p opencode    # apm update + place OpenCode plugins
-apmw install -g -p opencode # same for the global install
+apmw install -p claude      # apm install + sanitize for Claude Code
+apmw update  -p copilot     # apm update + sanitize for GitHub Copilot
+apmw sanitize -g -p opencode  # sanitize the global OpenCode agent dir, no apm call
 ```
 
-Everything else — flags and the global install of the apm-hub packages — is in the
+Everything else — flags, global install of the apm-hub packages, authoring agents for several
+platforms from one source file, strip rules and per-platform references — is in the
 [user guide](docs/guide/README.md).
 
 ## Development
