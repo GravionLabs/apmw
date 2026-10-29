@@ -63,6 +63,14 @@ def test_opencode_permission_maps_skill_todo_and_mcp_tools(tmp_path: Path):
     assert lines[-3:] == ["  azure-devops_wit_query: allow", "  github_*: allow", "  skill: allow"]
 
 
+def test_opencode_user_invocable_false_derives_subagent_mode(tmp_path: Path):
+    fm = run(tmp_path, agent("tools: ['read']\nuser-invocable: false\n"), "opencode")
+    assert "mode: subagent" in fm and "user-invocable" not in fm
+    assert "mode:" not in run(tmp_path, agent("tools: ['read']\n"), "opencode")
+    kept = run(tmp_path, agent("user-invocable: false\nmode: primary\n"), "opencode")
+    assert "mode: primary" in kept and "subagent" not in kept
+
+
 def test_opencode_existing_permission_is_kept(tmp_path: Path):
     top = run(tmp_path, agent("tools: ['read']\npermission:\n  read: allow\n"), "opencode")
     assert top.count("permission:") == 1 and "edit: deny" not in top

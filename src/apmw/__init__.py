@@ -78,6 +78,8 @@ OPENCODE_PLUGIN_GLOB = "apm_modules/**/opencode/plugins/*.[tj]s"
 TOOLS_ARRAY_RE = re.compile(r'^tools:\s*\[')
 TOOLS_BLOCK_RE = re.compile(r'^tools:\s*$')
 PERMISSION_RE = re.compile(r'^permission:')
+MODE_RE = re.compile(r'^mode\s*:')
+USER_INVOCABLE_FALSE_RE = re.compile(r'^user-invocable\s*:\s*[\'"]?false[\'"]?\s*$', re.IGNORECASE)
 METADATA_RE = re.compile(r'^metadata\s*:')
 
 # Copilot tool aliases -> Claude Code tool names / OpenCode permission keys.
@@ -293,21 +295,28 @@ def derive_platform_fields(
     if platform == "claude" and "tools" not in defined | native_claude_fields(fm_lines, platform) and aliases:
         names = [n for a in aliases for n in CLAUDE_TOOLS[a]]
         return [f"tools: [{', '.join(names)}]"], unmapped
-    if platform == "opencode" and "permission" not in defined and not any(PERMISSION_RE.match(l) for l in fm_lines):
-        allowed = {p for a in aliases for p in OPENCODE_PERMISSIONS.get(a, [])}
-        extra: list[str] = []
-        for name in parse_tools(fm_lines):
-            key = name.lower()
-            if key == "skill":
-                extra.append("skill")
-            elif "/" in name:
-                extra.append(name.replace("/", "_", 1))
-        if allowed or extra:
-            # Copilot `tools` is an allowlist; "*" must come first because the last matching rule wins.
-            lines = ["permission:", '  "*": deny']
-            lines += [f"  {p}: {'allow' if p in allowed else 'deny'}" for p in OPENCODE_PERMISSION_ORDER]
-            lines += [f"  {p}: allow" for p in dict.fromkeys(extra)]
-            return lines, []
+    if platform == "opencode":
+        lines: list[str] = []
+        if "permission" not in defined and not any(PERMISSION_RE.match(l) for l in fm_lines):
+            allowed = {p for a in aliases for p in OPENCODE_PERMISSIONS.get(a, [])}
+            extra: list[str] = []
+            for name in parse_tools(fm_lines):
+                if name.lower() == "skill":
+                    extra.append("skill")
+                elif "/" in name:
+                    extra.append(name.replace("/", "_", 1))
+            if allowed or extra:
+                # Copilot `tools` is an allowlist; "*" must come first because the last matching rule wins.
+                lines = ["permission:", '  "*": deny']
+                lines += [f"  {p}: {'allow' if p in allowed else 'deny'}" for p in OPENCODE_PERMISSION_ORDER]
+                lines += [f"  {p}: allow" for p in dict.fromkeys(extra)]
+        if (
+            "mode" not in defined
+            and not any(MODE_RE.match(l) for l in fm_lines)
+            and any(USER_INVOCABLE_FALSE_RE.match(l) for l in fm_lines)
+        ):
+            lines.append("mode: subagent")
+        return lines, []
     return [], []
 
 

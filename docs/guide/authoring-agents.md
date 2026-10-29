@@ -112,7 +112,8 @@ Claude Code gets `tools: [Agent, Read, Grep, Glob, Bash]` for `['agent', 'read',
 that starts with `"*": deny` and then lists `read`, `glob`, `grep`, `edit`, `bash`, `task`,
 `webfetch`, `websearch` and `todowrite`: listed tools `allow`, the rest `deny`, followed by `allow`
 entries for `skill` and MCP tools, because the Copilot list is an allowlist. MCP entries map
-`server/tool` to `server_tool` and `server/*` to `server_*`. Anything these tables cannot express,
+`server/tool` to `server_tool` and `server/*` to `server_*`. `user-invocable: false` becomes
+`mode: subagent` unless `mode` is already set. Anything these tables cannot express,
 such as `question` permissions or extra Claude tools like `Skill`, belongs in `metadata.<platform>`.
 For Claude Code, entries without a mapping (for example `github/*`) are skipped and named in the
 output line (`derived tools (unmapped: github/*)`).
