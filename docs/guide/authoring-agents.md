@@ -102,16 +102,20 @@ The Copilot aliases map like this (the Claude and OpenCode names of a tool are a
 | `edit`          | `Edit`, `Write`     | `edit`                |
 | `execute`       | `Bash`              | `bash`                |
 | `agent`         | `Agent`             | `task`                |
-| `web`           | `WebFetch`, `WebSearch` | `webfetch`        |
-| `todo`          | `TodoWrite`         | —                     |
+| `web`           | `WebFetch`, `WebSearch` | `webfetch`, `websearch` |
+| `todo`          | `TodoWrite`         | `todowrite`           |
+| `skill`         | —                   | `skill`               |
+| `server/tool`   | —                   | `server_tool`         |
 
 Claude Code gets `tools: [Agent, Read, Grep, Glob, Bash]` for `['agent', 'read', 'search', 'execute']`.
 `model` is never derived; Claude inherits the session model. OpenCode gets a `permission:` block
-that lists `read`, `glob`, `grep`, `edit`, `bash`, `task` and `webfetch`: listed tools `allow`, the
-rest `deny`, because the Copilot list is an allowlist. Entries without a mapping, such as MCP tools
-(`github/*`), are skipped and named in the output line (`derived tools (unmapped: github/*)`).
-Anything these tables cannot express, such as `skill` or `question` permissions or extra Claude
-tools like `Skill`, belongs in `metadata.<platform>`.
+that starts with `"*": deny` and then lists `read`, `glob`, `grep`, `edit`, `bash`, `task`,
+`webfetch`, `websearch` and `todowrite`: listed tools `allow`, the rest `deny`, followed by `allow`
+entries for `skill` and MCP tools, because the Copilot list is an allowlist. MCP entries map
+`server/tool` to `server_tool` and `server/*` to `server_*`. Anything these tables cannot express,
+such as `question` permissions or extra Claude tools like `Skill`, belongs in `metadata.<platform>`.
+For Claude Code, entries without a mapping (for example `github/*`) are skipped and named in the
+output line (`derived tools (unmapped: github/*)`).
 
 ## What each platform receives
 

@@ -48,10 +48,19 @@ def test_claude_without_tools_adds_nothing(tmp_path: Path):
 def test_opencode_permission_derived_from_copilot(tmp_path: Path):
     fm = run(tmp_path, agent("tools: ['read', 'search']\n"), "opencode")
     assert "tools:" not in fm
-    assert fm.split("permission:\n")[1].splitlines()[:7] == [
+    assert fm.split("permission:\n")[1].splitlines()[:10] == [
+        '  "*": deny',
         "  read: allow", "  glob: allow", "  grep: allow",
         "  edit: deny", "  bash: deny", "  task: deny", "  webfetch: deny",
+        "  websearch: deny", "  todowrite: deny",
     ]
+
+
+def test_opencode_permission_maps_skill_todo_and_mcp_tools(tmp_path: Path):
+    fm = run(tmp_path, agent("tools: ['todo', 'azure-devops/wit_query', 'github/*', 'skill']\n"), "opencode")
+    lines = fm.split("permission:\n")[1].splitlines()
+    assert lines[0] == '  "*": deny' and "  todowrite: allow" in lines
+    assert lines[-3:] == ["  azure-devops_wit_query: allow", "  github_*: allow", "  skill: allow"]
 
 
 def test_opencode_existing_permission_is_kept(tmp_path: Path):
@@ -65,7 +74,7 @@ def test_unmapped_tools_are_reported_not_derived():
     fm = ["tools: ['read', 'github/*']"]
     assert derive_platform_fields(fm, "claude", []) == (["tools: [Read]"], ["github/*"])
     assert derive_platform_fields(["tools: ['github/*']"], "claude", []) == ([], [])
-    assert derive_platform_fields(["tools: ['github/*']"], "opencode", []) == ([], [])
+    assert derive_platform_fields(["tools: ['github/*']"], "opencode", [])[0][-1] == "  github_*: allow"
 
 
 def test_unmapped_tools_named_in_console_line(tmp_path: Path, capsys):

@@ -96,9 +96,10 @@ OPENCODE_PERMISSIONS = {
     "edit": ["edit"],
     "search": ["glob", "grep"],
     "agent": ["task"],
-    "web": ["webfetch"],
+    "web": ["webfetch", "websearch"],
+    "todo": ["todowrite"],
 }
-OPENCODE_PERMISSION_ORDER = ["read", "glob", "grep", "edit", "bash", "task", "webfetch"]
+OPENCODE_PERMISSION_ORDER = ["read", "glob", "grep", "edit", "bash", "task", "webfetch", "websearch", "todowrite"]
 TOOL_SYNONYMS = {
     "shell": "execute", "bash": "execute", "powershell": "execute",
     "notebookread": "read",
@@ -294,14 +295,19 @@ def derive_platform_fields(
         return [f"tools: [{', '.join(names)}]"], unmapped
     if platform == "opencode" and "permission" not in defined and not any(PERMISSION_RE.match(l) for l in fm_lines):
         allowed = {p for a in aliases for p in OPENCODE_PERMISSIONS.get(a, [])}
-        if allowed:
-            unmapped += [a for a in aliases if a not in OPENCODE_PERMISSIONS]
-            return (
-                ["permission:"] + [
-                    f"  {p}: {'allow' if p in allowed else 'deny'}" for p in OPENCODE_PERMISSION_ORDER
-                ],
-                unmapped,
-            )
+        extra: list[str] = []
+        for name in parse_tools(fm_lines):
+            key = name.lower()
+            if key == "skill":
+                extra.append("skill")
+            elif "/" in name:
+                extra.append(name.replace("/", "_", 1))
+        if allowed or extra:
+            # Copilot `tools` is an allowlist; "*" must come first because the last matching rule wins.
+            lines = ["permission:", '  "*": deny']
+            lines += [f"  {p}: {'allow' if p in allowed else 'deny'}" for p in OPENCODE_PERMISSION_ORDER]
+            lines += [f"  {p}: allow" for p in dict.fromkeys(extra)]
+            return lines, []
     return [], []
 
 
