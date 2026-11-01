@@ -112,6 +112,8 @@ jobs:
         with:
           version: ${{ needs.determine-version.outputs.semver }}
           tag-prefix: v
+          # Merging the release PR deletes release/next (delete_branch_on_merge); recreated here at the released commit.
+          recreate-branch: release/next
 
       - name: Download executable artifacts
         uses: actions/download-artifact@v4
